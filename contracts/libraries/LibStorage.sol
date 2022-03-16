@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 struct VaultStorage {
-    bytes12[] vaultNames;
     mapping(bytes12 => address) vaultAddresses;
     mapping(address => mapping(bytes12 => uint256)) userVaultBalances;
 }
