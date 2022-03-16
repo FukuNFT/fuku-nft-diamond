@@ -88,7 +88,7 @@ async function deploy() {
   // try to withdraw
   userBalance = await vaultAccounting.userBalance(user.address, EMPTY_VAULT);
   console.log("User balance after deposit:", ethers.utils.formatEther(userBalance));
-  tx = await vaultAccounting.connect(user).withdraw(EMPTY_VAULT, user.address, userBalance);
+  tx = await vaultAccounting.connect(user).withdraw(userBalance, EMPTY_VAULT);
   await tx.wait();
 
   console.log("Success.");

@@ -10,6 +10,10 @@ contract EmptyVaultUpgrade is IVault {
         return msg.value;
     }
 
+    function depositLpToken(address user, uint256 amount) external override returns (uint256) {
+        revert("Disabled.");
+    }
+
     function withdraw(uint256 lpTokenAmount, address payable recipient) external override returns (uint256) {
         recipient.transfer(lpTokenAmount);
 
