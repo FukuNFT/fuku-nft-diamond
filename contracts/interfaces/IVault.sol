@@ -8,9 +8,9 @@ interface IVault {
 
     function withdraw(uint256 lpTokenAmount, address payable recipient) external returns (uint256);
 
+    function transferFunds(address payable newVaultAddress) external;
+
     function getAmountETH(uint256 lpTokenAmount) external view returns (uint256);
 
     function getAmountLpTokens(uint256 ethAmount) external view returns (uint256);
-
-    function transferFunds(address payable newVaultAddress) external;
 }

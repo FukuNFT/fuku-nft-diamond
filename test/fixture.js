@@ -52,9 +52,8 @@ const fixture = deployments.createFixture(async () => {
 
   // create and register vault
   const EmptyVault = await ethers.getContractFactory("EmptyVault");
-  const emptyVault = await EmptyVault.deploy();
+  const emptyVault = await EmptyVault.deploy(diamond.address);
   await emptyVault.deployed();
-
   tx = await vaultManagement.registerVault(vaultNames.empty, emptyVault.address);
   await tx.wait();
 

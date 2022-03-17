@@ -1,20 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IVault } from "../interfaces/IVault.sol";
+import { BaseVault } from "./BaseVault.sol";
 
-contract EmptyVault is IVault {
-    function deposit() external payable override returns (uint256) {
+contract EmptyVault is BaseVault {
+    constructor(address _diamond) BaseVault(_diamond) {}
+
+    function deposit() external payable override onlyDiamond nonReentrant returns (uint256) {
         // nothing to do
 
         return msg.value;
     }
 
-    function depositLpToken(address user, uint256 amount) external override returns (uint256) {
+    function depositLpToken(address, uint256) external override onlyDiamond nonReentrant returns (uint256) {
         revert("Disabled.");
     }
 
-    function withdraw(uint256 lpTokenAmount, address payable recipient) external override returns (uint256) {
+    function transferFunds(address payable newVaultAddress) external override onlyDiamond {
+        newVaultAddress.transfer(address(this).balance);
+    }
+
+    function withdraw(uint256 lpTokenAmount, address payable recipient)
+        external
+        override
+        onlyDiamond
+        nonReentrant
+        returns (uint256)
+    {
         recipient.transfer(lpTokenAmount);
 
         return lpTokenAmount;
@@ -26,10 +38,6 @@ contract EmptyVault is IVault {
 
     function getAmountLpTokens(uint256 ethAmount) external pure override returns (uint256) {
         return ethAmount;
-    }
-
-    function transferFunds(address payable newVaultAddress) external override {
-        newVaultAddress.transfer(address(this).balance);
     }
 
     receive() external payable {}
