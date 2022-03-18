@@ -43,6 +43,4 @@ contract EmptyVault is BaseVault {
     function getAmountLpTokens(uint256 ethAmount) external pure override returns (uint256) {
         return ethAmount;
     }
-
-    receive() external payable {}
 }

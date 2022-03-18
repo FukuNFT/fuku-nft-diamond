@@ -24,7 +24,7 @@ describe("Vault Accounting", async () => {
       await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount })
     ).to.changeEtherBalance(user, amount.mul(-1));
     // user balance should be reflected
-    expect(await vaultAccounting.userBalance(user.address, vaultNames.empty)).to.equal(expectedLpTokens);
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty)).to.equal(expectedLpTokens);
   });
 
   it("should successfully emit event from deposit", async () => {
@@ -58,7 +58,7 @@ describe("Vault Accounting", async () => {
     // start by depositing
     const amount = ethers.utils.parseEther("1.0");
     await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
-    const userBalance = await vaultAccounting.userBalance(user.address, vaultNames.empty);
+    const userBalance = await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
 
     // withdraw
@@ -67,14 +67,14 @@ describe("Vault Accounting", async () => {
       amount
     );
     // user balance should be reflected
-    expect(await vaultAccounting.userBalance(user.address, vaultNames.empty)).to.equal(0);
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty)).to.equal(0);
   });
 
   it("should successfully emit event from withdraw", async () => {
     // start by depositing
     const amount = ethers.utils.parseEther("1.0");
     await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
-    const userBalance = await vaultAccounting.userBalance(user.address, vaultNames.empty);
+    const userBalance = await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
 
     // listen to event
@@ -94,7 +94,7 @@ describe("Vault Accounting", async () => {
     // start by depositing
     const amount = ethers.utils.parseEther("1.0");
     await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
-    const userBalance = await vaultAccounting.userBalance(user.address, vaultNames.empty);
+    const userBalance = await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
 
     // attempt to withdraw
