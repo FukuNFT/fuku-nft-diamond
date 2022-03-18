@@ -1,10 +1,17 @@
 {
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "chai": "^4.3.6",
     "hardhat": "^2.9.1",
+    "hardhat-deploy": "^0.11.0",
+    "hardhat-deploy-ethers": "^0.3.0-beta.13",
     "prettier": "^2.5.1",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.7",
     "solhint-plugin-prettier": "^0.0.5"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.5.0"
   }
 }
