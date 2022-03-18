@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { IVaultAccounting } from "../interfaces/IVaultAccounting.sol";
 import { IVault } from "../interfaces/IVault.sol";
 import { LibStorage, VaultStorage } from "../libraries/LibStorage.sol";
+import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 
 contract VaultAccountingFacet is IVaultAccounting {
     /**
@@ -75,8 +76,6 @@ contract VaultAccountingFacet is IVaultAccounting {
      * @param vaultName The vault to query for
      */
     function userBalance(address user, bytes12 vaultName) external view override returns (uint256) {
-        VaultStorage storage vs = LibStorage.vaultStorage();
-
-        return vs.userVaultBalances[user][vaultName];
+        return LibVaultUtils.getUserLpTokenBalance(user, vaultName);
     }
 }
