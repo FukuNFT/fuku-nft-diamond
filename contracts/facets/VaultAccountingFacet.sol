@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { IVaultAccounting } from "../interfaces/IVaultAccounting.sol";
+import { IVaultAccounting } from "../interfaces/facets/IVaultAccounting.sol";
 import { IVault } from "../interfaces/IVault.sol";
 import { LibStorage, VaultStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
