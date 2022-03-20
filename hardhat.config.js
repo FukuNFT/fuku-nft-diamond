@@ -19,6 +19,7 @@ module.exports = {
     },
   },
   gasReporter: {
+    enabled: false,
     currency: "USD",
     gasPrice: 25,
     coinmarketcap: process.env.COINMARKETCAP_API,

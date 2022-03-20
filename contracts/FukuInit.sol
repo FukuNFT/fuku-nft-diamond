@@ -17,6 +17,7 @@ import { IDiamondLoupe } from "./vendor/interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "./vendor/interfaces/IDiamondCut.sol";
 import { IERC173 } from "./vendor/interfaces/IERC173.sol";
 import { IERC165 } from "./vendor/interfaces/IERC165.sol";
+import { LibStorage, PunkTokenStorage } from "./libraries/LibStorage.sol";
 import { IVaultAccounting } from "./interfaces/facets/IVaultAccounting.sol";
 import { IVaultManagement } from "./interfaces/facets/IVaultManagement.sol";
 import { IBidMarket } from "./interfaces/facets/IBidMarket.sol";
@@ -28,7 +29,7 @@ import { IBidMarket } from "./interfaces/facets/IBidMarket.sol";
 contract FukuInit {
     // You can add parameters to this function in order to pass in
     // data to set your own state variables
-    function init() external {
+    function init(address cryptoPunks) external {
         // adding ERC165 data
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
@@ -45,5 +46,7 @@ contract FukuInit {
         // These arguments are used to execute an arbitrary function using delegatecall
         // in order to set state variables in the diamond during deployment or an upgrade
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
+        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
+        pts.punkToken = cryptoPunks;
     }
 }
