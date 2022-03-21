@@ -150,7 +150,7 @@ contract BidMarketFacet is IBidMarket {
         );
 
         // update user balance
-        vs.userVaultBalances[msg.sender][bidInfo.bidInputParams.vault] -= bidLPTokenAmount;
+        vs.userVaultBalances[bidInfo.bidder][bidInfo.bidInputParams.vault] -= bidLPTokenAmount;
         // withdraw funds from vault
         uint256 ethReturned = vault.withdraw(bidLPTokenAmount, payable(this));
         // another safety check to make sure enough ETH was withdrawn
@@ -162,6 +162,11 @@ contract BidMarketFacet is IBidMarket {
                 ICryptoPunksMarket(pts.punkToken).punkIndexToAddress(bidInfo.bidInputParams.nftIndex) == msg.sender,
                 "Not your punk"
             );
+
+            ICryptoPunksMarket(pts.punkToken).buyPunk{ value: bidInfo.bidInputParams.amount }(
+                bidInfo.bidInputParams.nftIndex
+            );
+            ICryptoPunksMarket(pts.punkToken).transferPunk(bidInfo.bidder, bidInfo.bidInputParams.nftIndex);
         } else {
             require(
                 IERC721(bidInfo.bidInputParams.nft).ownerOf(bidInfo.bidInputParams.nftIndex) == msg.sender,
@@ -175,10 +180,10 @@ contract BidMarketFacet is IBidMarket {
                 bidInfo.bidder,
                 bidInfo.bidInputParams.nftIndex
             );
-
-            delete bms.bids[bidId];
-            emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInputParams.amount);
         }
+
+        delete bms.bids[bidId];
+        emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInputParams.amount);
     }
 
     receive() external payable {}

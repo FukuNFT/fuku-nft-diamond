@@ -92,7 +92,8 @@ describe("Bid Market", async () => {
   describe("Modifying bids", async () => {
     beforeEach(async () => {
       const bidAmount = ethers.utils.parseEther("0.5");
-      await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      await tx.wait();
     });
 
     it("should successfully modify a bid", async () => {
@@ -134,6 +135,129 @@ describe("Bid Market", async () => {
       // modify 2 bids
       bidAmounts = [ethers.utils.parseEther("0.3"), ethers.utils.parseEther("0.4")];
       await expect(bidMarket.modifyMultipleBids([0, 1], bidAmounts)).to.not.be.reverted;
+    });
+  });
+
+  describe("Withdrawing bids", async () => {
+    beforeEach(async () => {
+      // place bid
+      const bidAmount = ethers.utils.parseEther("0.5");
+      await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+    });
+
+    it("should successfully withdraw a bid", async () => {
+      await expect(bidMarket.withdrawBid(0)).to.emit(bidMarket, "BidWithdrawn").withArgs(0, user.address);
+    });
+
+    it("should fail to withdraw bid of another user", async () => {
+      await expect(bidMarket.connect(deployer).withdrawBid(0)).to.be.revertedWith("Not your bid");
+    });
+
+    it("should successfully withdraw multiple bids", async () => {
+      // place another bid
+      const bidAmount = ethers.utils.parseEther("0.5");
+      tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      await tx.wait();
+
+      await expect(bidMarket.withdrawMultipleBids([0, 1])).to.not.be.reverted;
+    });
+  });
+
+  describe("Accepting bids", async () => {
+    let bidAmount;
+    let bidMarketSeller;
+
+    beforeEach(async () => {
+      // place bid
+      bidAmount = ethers.utils.parseEther("1.0");
+      tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      await tx.wait();
+      tx = await bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, 0, bidAmount]);
+      await tx.wait();
+
+      bidMarketSeller = bidMarket.connect(deployer);
+    });
+
+    it("should successfully accept bid and emit event", async () => {
+      // approve token transfer
+      tx = await testERC721.approve(bidMarket.address, 0);
+      await tx.wait();
+
+      await expect(bidMarketSeller.acceptBid(0))
+        .to.emit(bidMarketSeller, "BidAccepted")
+        .withArgs(0, user.address, deployer.address, bidAmount);
+    });
+
+    it("should successfully accept bid and seller should receive bid amount", async () => {
+      // approve token transfer
+      tx = await testERC721.approve(bidMarket.address, 0);
+      await tx.wait();
+
+      await expect(await bidMarketSeller.acceptBid(0)).to.changeEtherBalance(deployer, bidAmount);
+    });
+
+    it("should successfully accept bid and buyer should be new owner of the NFT", async () => {
+      // approve token transfer
+      tx = await testERC721.approve(bidMarket.address, 0);
+      await tx.wait();
+
+      tx = await bidMarketSeller.acceptBid(0);
+      await tx.wait();
+      expect(await testERC721.ownerOf(0)).to.equal(user.address);
+    });
+
+    it("should successfully accept bid and buyer's LP balance should be reflected", async () => {
+      // approve token transfer
+      tx = await testERC721.approve(bidMarket.address, 0);
+      await tx.wait();
+
+      tx = await bidMarketSeller.acceptBid(0);
+      await tx.wait();
+
+      expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty)).to.equal(0);
+    });
+
+    it("should successfully accept punk bid and punk marketplace should receive bid amount", async () => {
+      // offer punk for sale
+      tx = await cryptoPunks.offerPunkForSaleToAddress(0, bidAmount, bidMarket.address);
+      await tx.wait();
+
+      await expect(await bidMarketSeller.acceptBid(1)).to.changeEtherBalance(cryptoPunks, bidAmount);
+    });
+
+    it("should successfully accept punk bid and transfer punk to bidder", async () => {
+      // offer punk for sale
+      tx = await cryptoPunks.offerPunkForSaleToAddress(0, bidAmount, bidMarket.address);
+      await tx.wait();
+
+      tx = await bidMarketSeller.acceptBid(1);
+      await tx.wait();
+
+      expect(await cryptoPunks.punkIndexToAddress(0)).to.equal(user.address);
+    });
+
+    it("should fail to accept bid that does not exist", async () => {
+      await expect(bidMarketSeller.acceptBid(2)).to.be.revertedWith("Bid does not exist");
+    });
+
+    it("should fail to accept bid if bid is no longer valid", async () => {
+      // withdraw funds as bidder
+      tx = await vaultAccounting.connect(user).withdraw(bidAmount, vaultNames.empty);
+      await tx.wait();
+
+      // approve token transfer
+      tx = await testERC721.approve(bidMarket.address, 0);
+      await tx.wait();
+
+      await expect(bidMarketSeller.acceptBid(0)).to.be.revertedWith("Bid no longer valid");
+    });
+
+    it("should fail to accept bid if not the owner of the NFT", async () => {
+      await expect(bidMarket.acceptBid(0)).to.be.revertedWith("Not your NFT");
+    });
+
+    it("should fail to accept bid if not the owner of the crypto punk", async () => {
+      await expect(bidMarket.acceptBid(1)).to.be.revertedWith("Not your punk");
     });
   });
 });

@@ -5,9 +5,6 @@ require("hardhat-deploy-ethers");
 require("hardhat-gas-reporter");
 require("dotenv").config();
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
 module.exports = {
   solidity: {
     version: "0.8.4",
