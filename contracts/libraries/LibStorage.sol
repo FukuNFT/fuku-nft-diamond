@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { BidInfo } from "../FukuTypes.sol";
+import { BidInfo, OptionInfo } from "../FukuTypes.sol";
 
 struct BidMarketStorage {
     uint256 nextBidId;
     mapping(uint256 => BidInfo) bids;
+}
+
+struct OptionMarketStorage {
+    uint256 nextOptionId;
+    mapping(uint256 => OptionInfo) options;
 }
 
 struct VaultStorage {
@@ -19,6 +24,7 @@ struct PunkTokenStorage {
 
 library LibStorage {
     bytes32 constant BID_MARKET_STORAGE_POSITION = keccak256("fuku.storage.market.bid");
+    bytes32 constant OPTION_MARKET_STORAGE_POSTION = keccak256("fuku.storage.market.option");
     bytes32 constant VAULT_STORAGE_POSITION = keccak256("fuku.storage.vault");
     bytes32 constant PUNK_TOKEN_STORAGE_POSITION = keccak256("fuku.storage.punk.token");
 
@@ -26,6 +32,13 @@ library LibStorage {
         bytes32 position = BID_MARKET_STORAGE_POSITION;
         assembly {
             bms.slot := position
+        }
+    }
+
+    function optionMarketStorage() internal pure returns (OptionMarketStorage storage oms) {
+        bytes32 position = OPTION_MARKET_STORAGE_POSTION;
+        assembly {
+            oms.slot := position
         }
     }
 
