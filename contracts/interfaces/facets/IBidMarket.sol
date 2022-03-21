@@ -25,11 +25,11 @@ interface IBidMarket {
 
     function modifyBid(uint256 bidId, uint256 amount) external;
 
-    function modifyMultipleBids(uint256[] memory bidIds, uint256[] memory amounts) external;
+    function modifyMultipleBids(uint256[] calldata bidIds, uint256[] calldata amounts) external;
 
     function withdrawBid(uint256 bidId) external;
 
-    function withdrawMultipleBids(uint256[] memory bidIds) external;
+    function withdrawMultipleBids(uint256[] calldata bidIds) external;
 
     function acceptBid(uint256 bidId) external;
 }

@@ -88,7 +88,7 @@ contract BidMarketFacet is IBidMarket {
      * @param bidIds Array of bid Ids
      * @param amounts Array of amounts
      */
-    function modifyMultipleBids(uint256[] memory bidIds, uint256[] memory amounts) external override {
+    function modifyMultipleBids(uint256[] calldata bidIds, uint256[] calldata amounts) external override {
         require(bidIds.length == amounts.length, "Array length mismatch");
         for (uint256 i; i < bidIds.length; ++i) {
             modifyBid(bidIds[i], amounts[i]);
@@ -117,7 +117,7 @@ contract BidMarketFacet is IBidMarket {
      *
      * @param bidIds Array of bid Ids
      */
-    function withdrawMultipleBids(uint256[] memory bidIds) external override {
+    function withdrawMultipleBids(uint256[] calldata bidIds) external override {
         for (uint256 i; i < bidIds.length; ++i) {
             withdrawBid(bidIds[i]);
         }
