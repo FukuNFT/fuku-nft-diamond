@@ -22,7 +22,13 @@ const fixture = deployments.createFixture(async () => {
   await fukuInit.deployed();
 
   // deploy the other facets
-  const FacetNames = ["DiamondLoupeFacet", "OwnershipFacet", "VaultAccountingFacet", "VaultManagementFacet"];
+  const FacetNames = [
+    "DiamondLoupeFacet",
+    "OwnershipFacet",
+    "BidMarketFacet",
+    "VaultAccountingFacet",
+    "VaultManagementFacet",
+  ];
   const cut = [];
   for (const FacetName of FacetNames) {
     const Facet = await ethers.getContractFactory(FacetName);
@@ -35,13 +41,24 @@ const fixture = deployments.createFixture(async () => {
     });
   }
 
+  // create a test ERC721
+  const TestERC721 = await ethers.getContractFactory("TestERC721");
+  const testERC721 = await TestERC721.deploy();
+  await testERC721.deployed();
+
+  // create a test crypto punks contract
+  const CryptoPunks = await ethers.getContractFactory("TestCryptoPunks");
+  const cryptoPunks = await CryptoPunks.deploy();
+  await cryptoPunks.deployed();
+
   // call to diamond cut
-  const calldata = fukuInit.interface.encodeFunctionData("init");
+  const calldata = fukuInit.interface.encodeFunctionData("init", [cryptoPunks.address]);
   const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
   tx = await diamondCut.diamondCut(cut, fukuInit.address, calldata);
   await tx.wait();
 
   // get the facets of the diamond
+  const bidMarket = await ethers.getContractAt("IBidMarket", diamond.address);
   const vaultAccounting = await ethers.getContractAt("IVaultAccounting", diamond.address);
   const vaultManagement = await ethers.getContractAt("IVaultManagement", diamond.address);
 
@@ -60,9 +77,12 @@ const fixture = deployments.createFixture(async () => {
   return {
     diamond,
     diamondCut,
+    bidMarket,
     vaultAccounting,
     vaultManagement,
     vaultNames,
+    testERC721,
+    cryptoPunks,
   };
 });
 

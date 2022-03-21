@@ -16,4 +16,6 @@ abstract contract BaseVault is IVault, ReentrancyGuard {
         require(msg.sender == diamond, "Only diamond can call function");
         _;
     }
+
+    receive() external payable {}
 }

@@ -12,7 +12,7 @@ contract EmptyVault is BaseVault {
         return msg.value;
     }
 
-    function depositLpToken(address, uint256) external override onlyDiamond nonReentrant returns (uint256) {
+    function depositLpToken(uint256) external override onlyDiamond nonReentrant {
         revert("Disabled.");
     }
 
@@ -32,6 +32,10 @@ contract EmptyVault is BaseVault {
         return lpTokenAmount;
     }
 
+    function withdrawLpToken(uint256, address) external override onlyDiamond nonReentrant {
+        revert("Disabled.");
+    }
+
     function getAmountETH(uint256 lpTokenAmount) external pure override returns (uint256) {
         return lpTokenAmount;
     }
@@ -39,6 +43,4 @@ contract EmptyVault is BaseVault {
     function getAmountLpTokens(uint256 ethAmount) external pure override returns (uint256) {
         return ethAmount;
     }
-
-    receive() external payable {}
 }
