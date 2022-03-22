@@ -27,9 +27,15 @@ interface IOptionMarket {
         uint256 optionEnd
     );
 
-    event OptionExercised(uint256 optionId, address indexed bidder, uint256 strike);
+    event OptionExercised(
+        uint256 optionId,
+        address indexed bidder,
+        uint256 strike,
+        address indexed nft,
+        uint256 indexed nftIndex
+    );
 
-    event OptionExpired(uint256 optionId);
+    event OptionClosed(uint256 optionId);
 
     function placeOptionBid(OptionInputParams calldata optionParams) external;
 
