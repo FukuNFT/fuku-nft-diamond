@@ -14,21 +14,23 @@ struct BidInputParams {
 }
 
 struct BidInfo {
-    BidInputParams bidInputParams; // the input params used to create bid
+    BidInputParams bidInput; // the input params used to create bid
     address bidder; // the address of the bidder
 }
 
 struct OptionInputParams {
-    BidInputParams bidInputParams;
+    BidInputParams bidInput;
     uint256 premium;
     OptionDuration duration;
 }
 
 struct OptionInfo {
-    BidInputParams bidInputParams; // the input params used to create base part of bid
+    OptionInputParams optionInput; // the input params used to create base part of bid
     bool exercisable; // true if option can be exercised, false otherwise
     address bidder; // the bidder (buyer)
-    address seller; // the nft owner (seller)
-    uint256 premium; // the option premium
-    uint256 optionExpiry; // the option expiry
+}
+
+struct AcceptedOption {
+    uint256 expiry;
+    address seller;
 }

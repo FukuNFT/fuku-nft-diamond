@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { BidInfo, OptionInfo } from "../FukuTypes.sol";
+import { BidInfo, OptionInfo, AcceptedOption } from "../FukuTypes.sol";
 
 struct BidMarketStorage {
     uint256 nextBidId;
@@ -11,6 +11,7 @@ struct BidMarketStorage {
 struct OptionMarketStorage {
     uint256 nextOptionId;
     mapping(uint256 => OptionInfo) options;
+    mapping(uint256 => AcceptedOption) acceptedOptions;
 }
 
 struct VaultStorage {

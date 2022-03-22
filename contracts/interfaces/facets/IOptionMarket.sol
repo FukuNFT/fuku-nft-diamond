@@ -8,7 +8,7 @@ interface IOptionMarket {
         uint256 optionId,
         uint256 strike,
         uint256 premium,
-        uint256 expiry,
+        OptionDuration duration,
         bytes12 vaultName,
         address indexed collection,
         uint256 indexed nftIndex,
@@ -17,7 +17,7 @@ interface IOptionMarket {
 
     event OptionBidWithdrawn(uint256 optionId, address indexed bidder);
 
-    event OptionBidModified(uint256 optionId, uint256 strike, uint256 premium, uint256 expiry);
+    event OptionBidModified(uint256 optionId, uint256 strike, uint256 premium, OptionDuration duration);
 
     event OptionBidAccepted(
         uint256 optionId,
