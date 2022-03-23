@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
@@ -16,7 +16,7 @@ describe("Vault Management", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ diamond, vaultManagement, vaultNames } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
 
     // initialize vault parameters
     vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
@@ -24,7 +24,7 @@ describe("Vault Management", async () => {
 
   it("should successfully register a vault", async () => {
     // deploy the new vault
-    const EmptyVault = await ethers.getContractFactory("EmptyVault");
+    const EmptyVault = await hre.ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
     await emptyVault.deployed();
 
@@ -36,7 +36,7 @@ describe("Vault Management", async () => {
 
   it("should fail to register a vault if not diamond owner", async () => {
     // deploy the new vault
-    const EmptyVault = await ethers.getContractFactory("EmptyVault");
+    const EmptyVault = await hre.ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
     await emptyVault.deployed();
 
@@ -48,7 +48,7 @@ describe("Vault Management", async () => {
 
   it("should fail to register a vault if name is already in use", async () => {
     // deploy the new vault
-    const EmptyVault = await ethers.getContractFactory("EmptyVault");
+    const EmptyVault = await hre.ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
     await emptyVault.deployed();
 
@@ -60,7 +60,7 @@ describe("Vault Management", async () => {
 
   it("should successfully unregister a vault", async () => {
     // deploy the new vault
-    const EmptyVault = await ethers.getContractFactory("EmptyVault");
+    const EmptyVault = await hre.ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
     await emptyVault.deployed();
 
@@ -77,7 +77,7 @@ describe("Vault Management", async () => {
 
   it("should fail to unregister a vault if not diamond owner", async () => {
     // deploy the new vault
-    const EmptyVault = await ethers.getContractFactory("EmptyVault");
+    const EmptyVault = await hre.ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
     await emptyVault.deployed();
 

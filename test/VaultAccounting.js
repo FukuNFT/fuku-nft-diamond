@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
@@ -18,11 +18,11 @@ describe("Vault Accounting", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ vaultAccounting, vaultManagement, vaultNames } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
 
     // initialize vault parameters
-    emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
-    amount = ethers.utils.parseEther("1.0");
+    emptyVault = await hre.ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
+    amount = hre.ethers.utils.parseEther("1.0");
     expectedLpTokens = await emptyVault.getAmountLpTokens(amount);
   });
 
