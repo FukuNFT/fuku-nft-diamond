@@ -21,6 +21,7 @@ import { LibStorage, PunkTokenStorage } from "./libraries/LibStorage.sol";
 import { IVaultAccounting } from "./interfaces/facets/IVaultAccounting.sol";
 import { IVaultManagement } from "./interfaces/facets/IVaultManagement.sol";
 import { IBidMarket } from "./interfaces/facets/IBidMarket.sol";
+import { IOptionMarket } from "./interfaces/facets/IOptionMarket.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -39,6 +40,7 @@ contract FukuInit {
         ds.supportedInterfaces[type(IVaultAccounting).interfaceId] = true;
         ds.supportedInterfaces[type(IVaultManagement).interfaceId] = true;
         ds.supportedInterfaces[type(IBidMarket).interfaceId] = true;
+        ds.supportedInterfaces[type(IOptionMarket).interfaceId] = true;
 
         // add your own state variables
         // EIP-2535 specifies that the `diamondCut` function takes two optional
