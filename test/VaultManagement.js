@@ -20,9 +20,11 @@ describe("Vault Management", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
-    await vaultManagement.registerVault(vaultName, emptyVault.address);
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.equal(emptyVault.address);
   });
 
@@ -32,6 +34,7 @@ describe("Vault Management", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
     await expect(vaultManagement.connect(user).registerVault(vaultName, emptyVault.address)).to.be.revertedWith(
@@ -43,6 +46,7 @@ describe("Vault Management", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
     await expect(vaultManagement.registerVault(vaultNames.empty, emptyVault.address)).to.be.revertedWith(
@@ -56,13 +60,16 @@ describe("Vault Management", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
-    await vaultManagement.registerVault(vaultName, emptyVault.address);
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.equal(emptyVault.address);
 
     // unregister
-    await vaultManagement.unregisterVault(vaultName);
+    tx = await vaultManagement.unregisterVault(vaultName);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.not.equal(emptyVault.address);
   });
 
@@ -72,9 +79,11 @@ describe("Vault Management", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
-    await vaultManagement.registerVault(vaultName, emptyVault.address);
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.equal(emptyVault.address);
 
     // unregister

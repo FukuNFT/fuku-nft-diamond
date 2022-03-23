@@ -20,7 +20,8 @@ describe("Bid Market", async () => {
     // deposit eth in vault
     const emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
     const amount = ethers.utils.parseEther("1.0");
-    await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    await tx.wait();
   });
 
   describe("Placing bids", async () => {
@@ -142,7 +143,8 @@ describe("Bid Market", async () => {
     beforeEach(async () => {
       // place bid
       const bidAmount = ethers.utils.parseEther("0.5");
-      await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      await tx.wait();
     });
 
     it("should successfully withdraw a bid", async () => {

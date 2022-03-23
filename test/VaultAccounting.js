@@ -57,7 +57,8 @@ describe("Vault Accounting", async () => {
   it("should successfully withdraw from vault", async () => {
     // start by depositing
     const amount = ethers.utils.parseEther("1.0");
-    await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    await tx.wait();
     const userBalance = await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
 
@@ -73,7 +74,8 @@ describe("Vault Accounting", async () => {
   it("should successfully emit event from withdraw", async () => {
     // start by depositing
     const amount = ethers.utils.parseEther("1.0");
-    await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    await tx.wait();
     const userBalance = await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
 
@@ -93,7 +95,8 @@ describe("Vault Accounting", async () => {
   it("should fail to withdraw more than user balance", async () => {
     // start by depositing
     const amount = ethers.utils.parseEther("1.0");
-    await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    await tx.wait();
     const userBalance = await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
 
