@@ -4,6 +4,7 @@ const { expect } = require("chai");
 const { fixture } = require("./fixture");
 
 describe("Bid Market", async () => {
+  // fixture values
   let deployer, user;
   let bidMarket;
   let vaultAccounting;
@@ -12,66 +13,68 @@ describe("Bid Market", async () => {
   let testERC721;
   let cryptoPunks;
 
+  // bidding parameters
+  let bidAmount;
+  let nftId;
+  let bidMarketSeller;
+
   beforeEach(async () => {
+    // initialize fixture values
     ({ bidMarket, vaultAccounting, vaultManagement, vaultNames, testERC721, cryptoPunks } = await fixture());
     [deployer, user] = await ethers.getSigners();
     bidMarket = bidMarket.connect(user);
 
+    // initialize bidding parameters
+    bidAmount = ethers.utils.parseEther("0.5");
+    nftId = 0;
+    bidMarketSeller = bidMarket.connect(deployer);
+
     // deposit eth in vault
     const emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
     const amount = ethers.utils.parseEther("1.0");
-    await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    await tx.wait();
   });
 
   describe("Placing bids", async () => {
     it("should successfully place a bid", async () => {
-      const bidAmount = ethers.utils.parseEther("0.5");
-      const nftId = 0;
-
       await expect(bidMarket.placeBid([vaultNames.empty, testERC721.address, nftId, bidAmount]))
         .to.emit(bidMarket, "BidEntered")
         .withArgs(0, bidAmount, vaultNames.empty, testERC721.address, nftId, user.address);
     });
 
     it("should successfully place a crypto punks bid", async () => {
-      const bidAmount = ethers.utils.parseEther("0.5");
-      const nftId = 0;
-
       await expect(bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, nftId, bidAmount]))
         .to.emit(bidMarket, "BidEntered")
         .withArgs(0, bidAmount, vaultNames.empty, cryptoPunks.address, nftId, user.address);
     });
 
     it("should fail to place a bid of 0 value", async () => {
-      const bidAmount = ethers.utils.parseEther("0.0");
-      const nftId = 0;
+      const newBidAmount = ethers.utils.parseEther("0.0");
 
-      await expect(bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, nftId, bidAmount])).to.be.revertedWith(
+      await expect(bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, nftId, newBidAmount])).to.be.revertedWith(
         "Insufficient bid amount"
       );
     });
 
     it("should fail to place a bid if crypto punks index is invalid", async () => {
-      const bidAmount = ethers.utils.parseEther("0.5");
-      const nftId = 10000;
+      const newNftId = 10000;
 
-      await expect(bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, nftId, bidAmount])).to.be.revertedWith(
+      await expect(bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, newNftId, bidAmount])).to.be.revertedWith(
         "Punk not found"
       );
     });
 
     it("should fail to place a bid if nft has no owner", async () => {
-      const bidAmount = ethers.utils.parseEther("0.5");
-      const nftId = 10000;
+      const newNftId = 10000;
 
-      await expect(bidMarket.placeBid([vaultNames.empty, testERC721.address, nftId, bidAmount])).to.be.reverted;
+      await expect(bidMarket.placeBid([vaultNames.empty, testERC721.address, newNftId, bidAmount])).to.be.reverted;
     });
 
     it("should fail to place a bid if user does not have enough funds deposited", async () => {
-      const bidAmount = ethers.utils.parseEther("1.5");
-      const nftId = 0;
+      const newBidAmount = ethers.utils.parseEther("1.5");
 
-      await expect(bidMarket.placeBid([vaultNames.empty, testERC721.address, nftId, bidAmount])).to.be.revertedWith(
+      await expect(bidMarket.placeBid([vaultNames.empty, testERC721.address, nftId, newBidAmount])).to.be.revertedWith(
         "Insufficient funds"
       );
     });
@@ -91,7 +94,6 @@ describe("Bid Market", async () => {
 
   describe("Modifying bids", async () => {
     beforeEach(async () => {
-      const bidAmount = ethers.utils.parseEther("0.5");
       tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
       await tx.wait();
     });
@@ -141,8 +143,8 @@ describe("Bid Market", async () => {
   describe("Withdrawing bids", async () => {
     beforeEach(async () => {
       // place bid
-      const bidAmount = ethers.utils.parseEther("0.5");
-      await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
+      await tx.wait();
     });
 
     it("should successfully withdraw a bid", async () => {
@@ -155,7 +157,6 @@ describe("Bid Market", async () => {
 
     it("should successfully withdraw multiple bids", async () => {
       // place another bid
-      const bidAmount = ethers.utils.parseEther("0.5");
       tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
       await tx.wait();
 
@@ -164,9 +165,6 @@ describe("Bid Market", async () => {
   });
 
   describe("Accepting bids", async () => {
-    let bidAmount;
-    let bidMarketSeller;
-
     beforeEach(async () => {
       // place bid
       bidAmount = ethers.utils.parseEther("1.0");
@@ -174,8 +172,6 @@ describe("Bid Market", async () => {
       await tx.wait();
       tx = await bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, 0, bidAmount]);
       await tx.wait();
-
-      bidMarketSeller = bidMarket.connect(deployer);
     });
 
     it("should successfully accept bid and emit event", async () => {

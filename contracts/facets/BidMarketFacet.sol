@@ -74,10 +74,10 @@ contract BidMarketFacet is IBidMarket {
         require(newAmount > 0, "Insufficient bid amount");
 
         // verify bidder has enough in vault to make bid
-        uint256 userEthVaultBalance = LibVaultUtils.getUserEthBalance(msg.sender, bms.bids[bidId].bidInputParams.vault);
+        uint256 userEthVaultBalance = LibVaultUtils.getUserEthBalance(msg.sender, bms.bids[bidId].bidInput.vault);
         require(newAmount <= userEthVaultBalance, "Insufficient funds");
 
-        bms.bids[bidId].bidInputParams.amount = newAmount;
+        bms.bids[bidId].bidInput.amount = newAmount;
 
         emit BidModified(bidId, newAmount);
     }
@@ -88,7 +88,7 @@ contract BidMarketFacet is IBidMarket {
      * @param bidIds Array of bid Ids
      * @param amounts Array of amounts
      */
-    function modifyMultipleBids(uint256[] memory bidIds, uint256[] memory amounts) external override {
+    function modifyMultipleBids(uint256[] calldata bidIds, uint256[] calldata amounts) external override {
         require(bidIds.length == amounts.length, "Array length mismatch");
         for (uint256 i; i < bidIds.length; ++i) {
             modifyBid(bidIds[i], amounts[i]);
@@ -117,7 +117,7 @@ contract BidMarketFacet is IBidMarket {
      *
      * @param bidIds Array of bid Ids
      */
-    function withdrawMultipleBids(uint256[] memory bidIds) external override {
+    function withdrawMultipleBids(uint256[] calldata bidIds) external override {
         for (uint256 i; i < bidIds.length; ++i) {
             withdrawBid(bidIds[i]);
         }
@@ -134,56 +134,47 @@ contract BidMarketFacet is IBidMarket {
         PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
 
         BidInfo memory bidInfo = bms.bids[bidId];
-        IVault vault = IVault(vs.vaultAddresses[bidInfo.bidInputParams.vault]);
+        IVault vault = IVault(vs.vaultAddresses[bidInfo.bidInput.vault]);
 
         // verify bid exists
         require(bidInfo.bidder != address(0), "Bid does not exist");
 
         // verify bidder still has enough in vault for bid to go through
-        uint256 bidLPTokenAmount = vault.getAmountLpTokens(bidInfo.bidInputParams.amount);
-        uint256 userLPTokenBalance = LibVaultUtils.getUserLpTokenBalance(bidInfo.bidder, bidInfo.bidInputParams.vault);
-        uint256 userEthVaultBalance = LibVaultUtils.getUserEthBalance(bidInfo.bidder, bidInfo.bidInputParams.vault);
+        uint256 bidLPTokenAmount = vault.getAmountLpTokens(bidInfo.bidInput.amount);
+        uint256 userLPTokenBalance = LibVaultUtils.getUserLpTokenBalance(bidInfo.bidder, bidInfo.bidInput.vault);
+        uint256 userEthVaultBalance = LibVaultUtils.getUserEthBalance(bidInfo.bidder, bidInfo.bidInput.vault);
         // check both LP and ETH in case of slight conversion rounding errors
         require(
-            bidLPTokenAmount <= userLPTokenBalance && bidInfo.bidInputParams.amount <= userEthVaultBalance,
+            bidLPTokenAmount <= userLPTokenBalance && bidInfo.bidInput.amount <= userEthVaultBalance,
             "Bid no longer valid"
         );
 
         // update user balance
-        vs.userVaultBalances[bidInfo.bidder][bidInfo.bidInputParams.vault] -= bidLPTokenAmount;
+        vs.userVaultBalances[bidInfo.bidder][bidInfo.bidInput.vault] -= bidLPTokenAmount;
         // withdraw funds from vault
         uint256 ethReturned = vault.withdraw(bidLPTokenAmount, payable(this));
         // another safety check to make sure enough ETH was withdrawn
-        require(bidInfo.bidInputParams.amount <= ethReturned, "Didn't burn enough LP tokens");
+        require(bidInfo.bidInput.amount <= ethReturned, "Didn't burn enough LP tokens");
 
         // check if punk bid
-        if (bidInfo.bidInputParams.nft == pts.punkToken) {
+        if (bidInfo.bidInput.nft == pts.punkToken) {
             require(
-                ICryptoPunksMarket(pts.punkToken).punkIndexToAddress(bidInfo.bidInputParams.nftIndex) == msg.sender,
+                ICryptoPunksMarket(pts.punkToken).punkIndexToAddress(bidInfo.bidInput.nftIndex) == msg.sender,
                 "Not your punk"
             );
 
-            ICryptoPunksMarket(pts.punkToken).buyPunk{ value: bidInfo.bidInputParams.amount }(
-                bidInfo.bidInputParams.nftIndex
-            );
-            ICryptoPunksMarket(pts.punkToken).transferPunk(bidInfo.bidder, bidInfo.bidInputParams.nftIndex);
+            ICryptoPunksMarket(pts.punkToken).buyPunk{ value: bidInfo.bidInput.amount }(bidInfo.bidInput.nftIndex);
+            ICryptoPunksMarket(pts.punkToken).transferPunk(bidInfo.bidder, bidInfo.bidInput.nftIndex);
         } else {
-            require(
-                IERC721(bidInfo.bidInputParams.nft).ownerOf(bidInfo.bidInputParams.nftIndex) == msg.sender,
-                "Not your NFT"
-            );
+            require(IERC721(bidInfo.bidInput.nft).ownerOf(bidInfo.bidInput.nftIndex) == msg.sender, "Not your NFT");
 
-            payable(msg.sender).transfer(bidInfo.bidInputParams.amount);
+            payable(msg.sender).transfer(bidInfo.bidInput.amount);
 
-            IERC721(bidInfo.bidInputParams.nft).safeTransferFrom(
-                msg.sender,
-                bidInfo.bidder,
-                bidInfo.bidInputParams.nftIndex
-            );
+            IERC721(bidInfo.bidInput.nft).safeTransferFrom(msg.sender, bidInfo.bidder, bidInfo.bidInput.nftIndex);
         }
 
         delete bms.bids[bidId];
-        emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInputParams.amount);
+        emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInput.amount);
     }
 
     receive() external payable {}

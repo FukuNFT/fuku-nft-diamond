@@ -4,34 +4,41 @@ const { expect } = require("chai");
 const { fixture } = require("./fixture");
 
 describe("Vault Management", async () => {
+  // fixture values
   let deployer, user;
   let diamond;
   let vaultManagement;
   let vaultNames;
 
+  // vault parameters
+  let vaultName;
+
   beforeEach(async () => {
+    // initialize fixture values
     ({ diamond, vaultManagement, vaultNames } = await fixture());
     [deployer, user] = await ethers.getSigners();
+
+    // initialize vault parameters
+    vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
   });
 
   it("should successfully register a vault", async () => {
-    const vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
-
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
-    await vaultManagement.registerVault(vaultName, emptyVault.address);
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.equal(emptyVault.address);
   });
 
   it("should fail to register a vault if not diamond owner", async () => {
-    const vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
-
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
     await expect(vaultManagement.connect(user).registerVault(vaultName, emptyVault.address)).to.be.revertedWith(
@@ -43,6 +50,7 @@ describe("Vault Management", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
     await expect(vaultManagement.registerVault(vaultNames.empty, emptyVault.address)).to.be.revertedWith(
@@ -51,30 +59,31 @@ describe("Vault Management", async () => {
   });
 
   it("should successfully unregister a vault", async () => {
-    const vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
-
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
-    await vaultManagement.registerVault(vaultName, emptyVault.address);
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.equal(emptyVault.address);
 
     // unregister
-    await vaultManagement.unregisterVault(vaultName);
+    tx = await vaultManagement.unregisterVault(vaultName);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.not.equal(emptyVault.address);
   });
 
   it("should fail to unregister a vault if not diamond owner", async () => {
-    const vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
-
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
 
     // register
-    await vaultManagement.registerVault(vaultName, emptyVault.address);
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
     expect(await vaultManagement.getVault(vaultName)).to.equal(emptyVault.address);
 
     // unregister
@@ -84,8 +93,6 @@ describe("Vault Management", async () => {
   });
 
   it("should fail to unregister a vault if name is not in use", async () => {
-    const vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
-
     // unregister
     await expect(vaultManagement.unregisterVault(vaultName)).to.be.revertedWith("Vault already unregistered");
   });
