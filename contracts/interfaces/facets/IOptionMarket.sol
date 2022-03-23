@@ -24,6 +24,7 @@ interface IOptionMarket {
         address indexed bidder,
         address indexed nftOwner,
         uint256 strike,
+        uint256 premium,
         uint256 optionEnd
     );
 

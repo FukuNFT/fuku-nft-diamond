@@ -199,7 +199,14 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         oms.acceptedOptions[optionId].expiry = expiry;
         oms.acceptedOptions[optionId].seller = msg.sender;
 
-        emit OptionBidAccepted(optionId, option.bidder, msg.sender, option.optionInput.bidInput.amount, expiry);
+        emit OptionBidAccepted(
+            optionId,
+            option.bidder,
+            msg.sender,
+            option.optionInput.bidInput.amount,
+            option.optionInput.premium,
+            expiry
+        );
     }
 
     /**
