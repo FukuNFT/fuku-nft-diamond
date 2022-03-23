@@ -9,8 +9,9 @@ import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 import { OptionDuration, OptionInputParams, OptionInfo } from "../FukuTypes.sol";
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract OptionMarketFacet is IOptionMarket {
+contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
     /**
      * @notice Places an option bid for the NFT
      *
@@ -285,6 +286,18 @@ contract OptionMarketFacet is IOptionMarket {
         delete oms.acceptedOptions[optionId];
 
         emit OptionClosed(optionId);
+    }
+
+    /**
+     * @notice Callback for ERC-721 compatibility
+     */
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
     function _transferNFT(

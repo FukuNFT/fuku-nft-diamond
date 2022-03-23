@@ -26,6 +26,7 @@ const fixture = deployments.createFixture(async () => {
     "DiamondLoupeFacet",
     "OwnershipFacet",
     "BidMarketFacet",
+    "OptionMarketFacet",
     "VaultAccountingFacet",
     "VaultManagementFacet",
   ];
@@ -59,6 +60,7 @@ const fixture = deployments.createFixture(async () => {
 
   // get the facets of the diamond
   const bidMarket = await ethers.getContractAt("IBidMarket", diamond.address);
+  const optionMarket = await ethers.getContractAt("IOptionMarket", diamond.address);
   const vaultAccounting = await ethers.getContractAt("IVaultAccounting", diamond.address);
   const vaultManagement = await ethers.getContractAt("IVaultManagement", diamond.address);
 
@@ -78,6 +80,7 @@ const fixture = deployments.createFixture(async () => {
     diamond,
     diamondCut,
     bidMarket,
+    optionMarket,
     vaultAccounting,
     vaultManagement,
     vaultNames,
