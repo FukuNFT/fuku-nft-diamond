@@ -279,7 +279,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // check to make sure is option seller
         require(oms.acceptedOptions[optionId].seller == msg.sender, "Not your option");
         // check to make sure option has expired
-        require(block.timestamp < oms.acceptedOptions[optionId].expiry, "Option not expired");
+        require(block.timestamp >= oms.acceptedOptions[optionId].expiry, "Option not expired");
 
         // send nft back to seller
         _transferNFT(
