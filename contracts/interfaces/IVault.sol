@@ -1,37 +1,30 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IVault {
+import "./IERC4626.sol";
+
+interface IVault is IERC4626 {
     /**
-     * @dev Deposits ETH and converts to vault's LP token
+     * @dev Deposits ETH and mints the vault's share token
      *
-     * @return The amount of LP tokens received from ETH deposit
+     * @param recipient The recipient of the newly minted share tokens
+     * @return The amount of vault tokens minted
      */
-    function deposit() external payable returns (uint256);
+    function depositEth(address recipient) external payable returns (uint256);
 
     /**
-     * @dev Deposits LP token directly into vault
+     * @dev Withdraws ETH and burns the vault's share token
      *
-     * @param amount The amount of LP tokens to deposit
-     */
-    function depositLpToken(uint256 amount) external;
-
-    /**
-     * @dev Converts LP token and withdraws as ETH
-     *
-     * @param lpTokenAmount The amount of LP tokens to withdraw before converting
+     * @param amount The amount of ETH to withdraw
      * @param recipient The recipient of the converted ETH
-     * @return The amount of ETH withdrawn
+     * @param owner The owner of the vault tokens to burn
+     * @return The amount of vault tokens burned
      */
-    function withdraw(uint256 lpTokenAmount, address payable recipient) external returns (uint256);
-
-    /**
-     * @dev Withdraws LP token directly from vault
-     *
-     * @param lpTokenAmount The amount of LP tokens to withdraw
-     * @param recipient The recipient of the LP tokens
-     */
-    function withdrawLpToken(uint256 lpTokenAmount, address recipient) external;
+    function withdrawEth(
+        uint256 amount,
+        address receiver,
+        address owner
+    ) external returns (uint256);
 
     /**
      * @dev Transfers LP tokens to new vault
@@ -41,16 +34,18 @@ interface IVault {
     function transferFunds(address payable newVaultAddress) external;
 
     /**
-     * @dev Gets the conversion from LP token to ETH
+     * @dev Gets the conversion from vault token to ETH
      *
-     * @param lpTokenAmount The LP token amount
+     * @param shares The amount of shares of vault token
+     * @return The amount of ETH equivalent to given amount of vault tokens
      */
-    function getAmountETH(uint256 lpTokenAmount) external view returns (uint256);
+    function convertSharesToEth(uint256 shares) external view returns (uint256);
 
     /**
-     * @dev Gets the conversion from ETH to LP token
+     * @dev Gets the conversion from ETH to vault token
      *
      * @param ethAmount The ETH amount
+     * @return The amount of vault tokens equivalent to given amount of ETH
      */
-    function getAmountLpTokens(uint256 ethAmount) external view returns (uint256);
+    function convertEthToShares(uint256 ethAmount) external view returns (uint256);
 }
