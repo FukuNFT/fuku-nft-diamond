@@ -20,90 +20,91 @@ contract VaultAccountingFacet is IVaultAccounting {
         require(vaultAddress != address(0), "Vault does not exist");
 
         // deposit into vault on behalf of sender
-        uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }();
+        uint256 lpTokensAmount = IVault(vaultAddress).depositEth{ value: msg.value }(address(this));
         vs.userVaultBalances[msg.sender][vaultName] += lpTokensAmount;
 
         emit DepositEth(msg.sender, vaultName, msg.value, lpTokensAmount);
     }
 
     /**
-     * @notice Deposits LP tokens directly into vault
+     * @notice Deposits vault tokens to allow for bidding
      * @dev Main point of entry into the marketplace
      *
      * @param vaultName The name of the vault as registered in the registry
-     * @param amount The amount of LP tokens to deposit
+     * @param amount The amount of vault tokens to deposit
      */
-    function depositLpToken(bytes12 vaultName, uint256 amount) external override {
+    function depositVaultToken(bytes12 vaultName, uint256 amount) external override {
         VaultStorage storage vs = LibStorage.vaultStorage();
 
         address vaultAddress = vs.vaultAddresses[vaultName];
         require(vaultAddress != address(0), "Vault does not exist");
 
         // deposit into vault on behalf of sender
-        IVault(vaultAddress).depositLpToken(amount);
+        //IVault(vaultAddress).depositLpToken(amount);
         vs.userVaultBalances[msg.sender][vaultName] += amount;
 
-        emit DepositLpToken(msg.sender, vaultName, amount);
+        emit DepositVaultToken(msg.sender, vaultName, amount);
     }
 
     /**
-     * @notice Withdraw ETH from the user's lp token in vault
+     * @notice Withdraw ETH from the vault on the user's behalf
      *
-     * @param lpTokenAmount The amount to withdraw
+     * @param ethAmount The amount of ETH to withdraw
      * @param vaultName The vault to withdraw from
      */
-    function withdraw(uint256 lpTokenAmount, bytes12 vaultName) external override {
+    function withdraw(uint256 ethAmount, bytes12 vaultName) external override {
         VaultStorage storage vs = LibStorage.vaultStorage();
 
         address vaultAddress = vs.vaultAddresses[vaultName];
         require(vaultAddress != address(0), "Vault does not exist");
 
         // verify the user deposit information
+        uint256 lpTokenAmount = IVault(vaultAddress).convertEthToShares(ethAmount);
         require(lpTokenAmount <= vs.userVaultBalances[msg.sender][vaultName], "Insufficient token balance");
 
         // update user balance
         vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
         // withdraw from vault and send to recipient
-        uint256 amountWithdrawn = IVault(vaultAddress).withdraw(lpTokenAmount, payable(msg.sender));
+        uint256 amountWithdrawn = IVault(vaultAddress).withdrawEth(lpTokenAmount, msg.sender, address(this));
 
         emit Withdraw(msg.sender, vaultName, amountWithdrawn, lpTokenAmount);
     }
 
     /**
-     * @notice Withdraw user's LP tokens from the vault
+     * @notice Withdraw user's vault tokens
      *
-     * @param lpTokenAmount The amount of LP tokens to withdraw
+     * @param vaultShares The amount of vault token shares to withdraw
      * @param vaultName The vault to withdraw from
      */
-    function withdrawLpToken(uint256 lpTokenAmount, bytes12 vaultName) external override {
+    function withdrawVaultToken(uint256 vaultShares, bytes12 vaultName) external override {
         VaultStorage storage vs = LibStorage.vaultStorage();
 
         address vaultAddress = vs.vaultAddresses[vaultName];
         require(vaultAddress != address(0), "Vault does not exist");
 
         // verify the user deposit information
-        require(lpTokenAmount <= vs.userVaultBalances[msg.sender][vaultName], "Insufficient token balance");
+        require(vaultShares <= vs.userVaultBalances[msg.sender][vaultName], "Insufficient token balance");
 
         // update user balance
-        vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
+        vs.userVaultBalances[msg.sender][vaultName] -= vaultShares;
         // withdraw from vault and send to recipient
-        IVault(vaultAddress).withdrawLpToken(lpTokenAmount, payable(msg.sender));
+        //IVault(vaultAddress).withdrawLpToken(vaultShares, payable(msg.sender));
 
-        emit WithdrawLpToken(msg.sender, vaultName, lpTokenAmount);
+        emit WithdrawVaultToken(msg.sender, vaultName, vaultShares);
     }
 
     /**
-     * @notice Queries the user's lp token balance for a vault
+     * @notice Returns how many vault tokens the user has deposited
      *
      * @param user The user to query for
      * @param vaultName The vault to query for
      */
-    function userLPTokenBalance(address user, bytes12 vaultName) external view override returns (uint256) {
+    function userVaultTokenBalance(address user, bytes12 vaultName) external view override returns (uint256) {
         return LibVaultUtils.getUserLpTokenBalance(user, vaultName);
     }
 
     /**
-     * @notice Queries the user's eth balance for a vault
+     * @notice Returns a user's balance in ETH for the amount of vault tokens deposited
      *
      * @param user The user to query for
      * @param vaultName The vault to query for
