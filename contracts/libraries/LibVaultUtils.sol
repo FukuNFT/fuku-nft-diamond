@@ -14,6 +14,6 @@ library LibVaultUtils {
     function getUserEthBalance(address user, bytes12 vaultName) internal view returns (uint256) {
         VaultStorage storage vs = LibStorage.vaultStorage();
 
-        return IVault(vs.vaultAddresses[vaultName]).getAmountETH(vs.userVaultBalances[user][vaultName]);
+        return IVault(vs.vaultAddresses[vaultName]).convertSharesToEth(vs.userVaultBalances[user][vaultName]);
     }
 }

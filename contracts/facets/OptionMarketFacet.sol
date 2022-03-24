@@ -141,7 +141,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         require(!option.exercisable, "Option already accepted");
 
         // make sure bidder can still cover the premium
-        uint256 premiumLPTokenAmount = vault.getAmountLpTokens(option.optionInput.premium);
+        uint256 premiumLPTokenAmount = vault.convertEthToShares(option.optionInput.premium);
         uint256 userLPTokenBalance = LibVaultUtils.getUserLpTokenBalance(
             option.bidder,
             option.optionInput.bidInput.vault
@@ -156,7 +156,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // update user balance
         vs.userVaultBalances[option.bidder][option.optionInput.bidInput.vault] -= premiumLPTokenAmount;
         // withdraw the premium from bidder's vault
-        uint256 ethReturned = vault.withdraw(premiumLPTokenAmount, payable(this));
+        uint256 ethReturned = vault.withdrawEth(premiumLPTokenAmount, address(this), address(this));
         // another safety check to make sure enough ETH was withdrawn
         require(option.optionInput.premium <= ethReturned, "Didn't burn enough LP tokens");
 
@@ -229,7 +229,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         require(block.timestamp < oms.acceptedOptions[optionId].expiry);
 
         // verify bidder has enough funds to exercise the option
-        uint256 strikeLPTokenAmount = vault.getAmountLpTokens(option.optionInput.bidInput.amount);
+        uint256 strikeLPTokenAmount = vault.convertEthToShares(option.optionInput.bidInput.amount);
         uint256 userLPTokenBalance = LibVaultUtils.getUserLpTokenBalance(
             option.bidder,
             option.optionInput.bidInput.vault
@@ -244,7 +244,11 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // update user balance
         vs.userVaultBalances[option.bidder][option.optionInput.bidInput.vault] -= strikeLPTokenAmount;
         // withdraw the strike amount from bidder's vault
-        uint256 ethReturned = vault.withdraw(strikeLPTokenAmount, payable(oms.acceptedOptions[optionId].seller));
+        uint256 ethReturned = vault.withdrawEth(
+            strikeLPTokenAmount,
+            address(oms.acceptedOptions[optionId].seller),
+            address(this)
+        );
         // another safety check to make sure enough ETH was withdrawn
         require(option.optionInput.bidInput.amount <= ethReturned, "Didn't burn enough LP tokens");
 

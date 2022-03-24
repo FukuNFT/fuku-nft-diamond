@@ -140,7 +140,7 @@ contract BidMarketFacet is IBidMarket {
         require(bidInfo.bidder != address(0), "Bid does not exist");
 
         // verify bidder still has enough in vault for bid to go through
-        uint256 bidLPTokenAmount = vault.getAmountLpTokens(bidInfo.bidInput.amount);
+        uint256 bidLPTokenAmount = vault.convertEthToShares(bidInfo.bidInput.amount);
         uint256 userLPTokenBalance = LibVaultUtils.getUserLpTokenBalance(bidInfo.bidder, bidInfo.bidInput.vault);
         uint256 userEthVaultBalance = LibVaultUtils.getUserEthBalance(bidInfo.bidder, bidInfo.bidInput.vault);
         // check both LP and ETH in case of slight conversion rounding errors
@@ -152,7 +152,7 @@ contract BidMarketFacet is IBidMarket {
         // update user balance
         vs.userVaultBalances[bidInfo.bidder][bidInfo.bidInput.vault] -= bidLPTokenAmount;
         // withdraw funds from vault
-        uint256 ethReturned = vault.withdraw(bidLPTokenAmount, payable(this));
+        uint256 ethReturned = vault.withdrawEth(bidLPTokenAmount, address(this), address(this));
         // another safety check to make sure enough ETH was withdrawn
         require(bidInfo.bidInput.amount <= ethReturned, "Didn't burn enough LP tokens");
 
