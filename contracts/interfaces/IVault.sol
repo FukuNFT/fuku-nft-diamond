@@ -22,7 +22,7 @@ interface IVault is IERC4626 {
      */
     function withdrawEth(
         uint256 amount,
-        address receiver,
+        address recipient,
         address owner
     ) external returns (uint256);
 

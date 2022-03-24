@@ -2,23 +2,23 @@
 pragma solidity ^0.8.0;
 
 interface IVaultAccounting {
-    event DepositEth(address indexed user, bytes12 indexed vaultName, uint256 amountEth, uint256 amountLp);
+    event DepositEth(address indexed user, bytes12 indexed vaultName, uint256 amountEth, uint256 amountShares);
 
-    event DepositLpToken(address indexed user, bytes12 indexed vaultName, uint256 amountLp);
+    event DepositVaultToken(address indexed user, bytes12 indexed vaultName, uint256 amountShares);
 
-    event Withdraw(address indexed user, bytes12 indexed vaultName, uint256 amountEth, uint256 amountLp);
+    event Withdraw(address indexed user, bytes12 indexed vaultName, uint256 amountEth, uint256 amountShares);
 
-    event WithdrawLpToken(address indexed user, bytes12 indexed vaultName, uint256 amountLp);
+    event WithdrawVaultToken(address indexed user, bytes12 indexed vaultName, uint256 amountShares);
 
     function deposit(bytes12 vaultName) external payable;
 
-    function depositLpToken(bytes12 vaultName, uint256 amount) external;
+    function depositVaultToken(bytes12 vaultName, uint256 amount) external;
 
-    function withdraw(uint256 lpTokenAmount, bytes12 vaultName) external;
+    function withdraw(uint256 ethAmount, bytes12 vaultName) external;
 
-    function withdrawLpToken(uint256 lpTokenAmount, bytes12 vault) external;
+    function withdrawVaultToken(uint256 vaultShares, bytes12 vault) external;
 
-    function userLPTokenBalance(address user, bytes12 vaultName) external view returns (uint256);
+    function userVaultTokenBalance(address user, bytes12 vaultName) external view returns (uint256);
 
     function userETHBalance(address user, bytes12 vaultName) external view returns (uint256);
 }
