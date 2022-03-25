@@ -210,7 +210,7 @@ describe("Bid Market", async () => {
       tx = await bidMarketSeller.acceptBid(0);
       await tx.wait();
 
-      expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty)).to.equal(0);
+      expect(await vaultAccounting.userVaultTokenBalance(user.address, vaultNames.empty)).to.equal(0);
     });
 
     it("should successfully accept punk bid and punk marketplace should receive bid amount", async () => {
