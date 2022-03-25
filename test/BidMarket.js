@@ -32,7 +32,7 @@ describe("Bid Market", async () => {
     // deposit eth in vault
     const emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
     const amount = ethers.utils.parseEther("1.0");
-    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
     await tx.wait();
   });
 

@@ -40,7 +40,7 @@ describe("Option Market", async () => {
 
     // deposit eth in vault
     const amount = ethers.utils.parseEther("1.0");
-    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
     await tx.wait();
   });
 
@@ -313,7 +313,7 @@ describe("Option Market", async () => {
     beforeEach(async () => {
       // deposit more funds
       const amount = ethers.utils.parseEther("3.0");
-      tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+      tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
       await tx.wait();
 
       // place an options bid
@@ -391,7 +391,7 @@ describe("Option Market", async () => {
     beforeEach(async () => {
       // deposit more funds
       const amount = ethers.utils.parseEther("3.0");
-      tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+      tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
       await tx.wait();
 
       // place an options bid

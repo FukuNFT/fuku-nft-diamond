@@ -29,7 +29,7 @@ describe("Vault Accounting", async () => {
   it("should successfully return user vault balance after deposit", async () => {
     // user balance should change
     await expect(
-      await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount })
+      await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount })
     ).to.changeEtherBalance(user, amount.mul(-1));
     // user balance should be reflected
     expect(await vaultAccounting.userVaultTokenBalance(user.address, vaultNames.empty)).to.equal(expectedLpTokens);
@@ -37,7 +37,7 @@ describe("Vault Accounting", async () => {
 
   it("should successfully emit event from deposit", async () => {
     // listen to event
-    await expect(vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount }))
+    await expect(vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount }))
       .to.emit(vaultAccounting, "DepositEth")
       .withArgs(user.address, vaultNames.empty, amount, expectedLpTokens);
   });
@@ -49,14 +49,14 @@ describe("Vault Accounting", async () => {
   it("should fail to deposit into non-existent vault", async () => {
     const badVault = "0xeeeeeeeeeeeeeeeeeeeeeeef";
 
-    await expect(vaultAccounting.connect(user).deposit(badVault, { value: amount })).to.be.revertedWith(
+    await expect(vaultAccounting.connect(user).deposit(badVault, true, { value: amount })).to.be.revertedWith(
       "Vault does not exist"
     );
   });
 
   it("should successfully withdraw from vault", async () => {
     // start by depositing
-    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
     await tx.wait();
     const userBalance = await vaultAccounting.userVaultTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
@@ -72,7 +72,7 @@ describe("Vault Accounting", async () => {
 
   it("should successfully emit event from withdraw", async () => {
     // start by depositing
-    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
     await tx.wait();
     const userBalance = await vaultAccounting.userVaultTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);
@@ -91,7 +91,7 @@ describe("Vault Accounting", async () => {
 
   it("should fail to withdraw more than user balance", async () => {
     // start by depositing
-    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, true, { value: amount });
     await tx.wait();
     const userBalance = await vaultAccounting.userVaultTokenBalance(user.address, vaultNames.empty);
     expect(userBalance).to.be.gt(0);

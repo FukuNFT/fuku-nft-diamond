@@ -21,8 +21,8 @@ describe("Vault Management", async () => {
 
     // initialize vault parameters
     vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
-    const Weth = await ethers.getContractFactory("WETH");
-    newWeth = await Weth.deploy();
+    const Weth = await ethers.getContractFactory("TestWeth");
+    newWeth = await Weth.deploy("Wrapped ETH", "WETH");
     await newWeth.deployed();
   });
 

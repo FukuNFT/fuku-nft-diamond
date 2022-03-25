@@ -70,8 +70,8 @@ const fixture = deployments.createFixture(async () => {
   };
 
   // create and register vault
-  const Weth = await ethers.getContractFactory("WETH");
-  const weth = await Weth.deploy();
+  const Weth = await ethers.getContractFactory("TestWeth");
+  const weth = await Weth.deploy("Wrapped ETH", "WETH");
   const EmptyVault = await ethers.getContractFactory("EmptyVault");
   const emptyVault = await EmptyVault.deploy(diamond.address, weth.address, "Empty Vault", "fETH");
   await emptyVault.deployed();
