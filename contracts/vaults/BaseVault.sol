@@ -5,8 +5,9 @@ import { IVault } from "../interfaces/IVault.sol";
 
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import { ERC4626 } from "@rari-capital/solmate/src/mixins/ERC4626.sol";
-import { ERC20 } from "@rari-capital/solmate/src/tokens/ERC20.sol";
+import { ERC20 } from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import { ERC4626 } from "openzeppelin-solidity/contracts/token/ERC20/extensions/ERC4626.sol";
+import { IERC20Metadata } from "openzeppelin-solidity/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 abstract contract BaseVault is IVault, ERC4626, ReentrancyGuard {
     address private diamond;
@@ -16,7 +17,7 @@ abstract contract BaseVault is IVault, ERC4626, ReentrancyGuard {
         address _asset,
         string memory _name,
         string memory _symbol
-    ) ERC4626(ERC20(_asset), _name, _symbol) {
+    ) ERC20(_name, _symbol) ERC4626(IERC20Metadata(_asset)) {
         diamond = _diamond;
     }
 

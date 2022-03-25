@@ -11,15 +11,15 @@ interface IVault {
     function depositEth(address recipient) external payable returns (uint256);
 
     /**
-     * @dev Withdraws ETH and burns the vault's share token
+     * @dev Burns the vault's share token and withdraws ETH
      *
-     * @param amount The amount of ETH to withdraw
+     * @param shares The amount of shares to burn
      * @param recipient The recipient of the converted ETH
      * @param owner The owner of the vault tokens to burn
-     * @return The amount of vault tokens burned
+     * @return The amount of ETH withdrawn
      */
-    function withdrawEth(
-        uint256 amount,
+    function redeemEth(
+        uint256 shares,
         address recipient,
         address owner
     ) external returns (uint256);
