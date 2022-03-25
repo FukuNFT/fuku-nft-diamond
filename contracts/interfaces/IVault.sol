@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./IERC4626.sol";
-
-interface IVault is IERC4626 {
+interface IVault {
     /**
      * @dev Deposits ETH and mints the vault's share token
      *
