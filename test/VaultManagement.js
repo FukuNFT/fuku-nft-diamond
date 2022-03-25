@@ -12,6 +12,7 @@ describe("Vault Management", async () => {
 
   // vault parameters
   let vaultName;
+  let newWeth;
 
   beforeEach(async () => {
     // initialize fixture values
@@ -20,12 +21,15 @@ describe("Vault Management", async () => {
 
     // initialize vault parameters
     vaultName = "0xeeeeeeeeeeeeeeeeeeeeeeef";
+    const Weth = await ethers.getContractFactory("WETH");
+    newWeth = await Weth.deploy();
+    await newWeth.deployed();
   });
 
   it("should successfully register a vault", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
-    const emptyVault = await EmptyVault.deploy(diamond.address);
+    const emptyVault = await EmptyVault.deploy(diamond.address, newWeth.address, "New Empty Vault", "fETH");
     await emptyVault.deployed();
 
     // register
@@ -37,7 +41,7 @@ describe("Vault Management", async () => {
   it("should fail to register a vault if not diamond owner", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
-    const emptyVault = await EmptyVault.deploy(diamond.address);
+    const emptyVault = await EmptyVault.deploy(diamond.address, newWeth.address, "New Empty Vault", "fETH");
     await emptyVault.deployed();
 
     // register
@@ -49,7 +53,7 @@ describe("Vault Management", async () => {
   it("should fail to register a vault if name is already in use", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
-    const emptyVault = await EmptyVault.deploy(diamond.address);
+    const emptyVault = await EmptyVault.deploy(diamond.address, newWeth.address, "New Empty Vault", "fETH");
     await emptyVault.deployed();
 
     // register
@@ -61,7 +65,7 @@ describe("Vault Management", async () => {
   it("should successfully unregister a vault", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
-    const emptyVault = await EmptyVault.deploy(diamond.address);
+    const emptyVault = await EmptyVault.deploy(diamond.address, newWeth.address, "New Empty Vault", "fETH");
     await emptyVault.deployed();
 
     // register
@@ -78,7 +82,7 @@ describe("Vault Management", async () => {
   it("should fail to unregister a vault if not diamond owner", async () => {
     // deploy the new vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
-    const emptyVault = await EmptyVault.deploy(diamond.address);
+    const emptyVault = await EmptyVault.deploy(diamond.address, newWeth.address, "New Empty Vault", "fETH");
     await emptyVault.deployed();
 
     // register
