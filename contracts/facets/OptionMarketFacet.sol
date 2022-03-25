@@ -156,7 +156,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // update user balance
         vs.userVaultBalances[option.bidder][option.optionInput.bidInput.vault] -= premiumLPTokenAmount;
         // withdraw the premium from bidder's vault
-        uint256 ethReturned = vault.withdrawEth(premiumLPTokenAmount, address(this), address(this));
+        uint256 ethReturned = vault.redeemEth(premiumLPTokenAmount, address(this), address(this));
         // another safety check to make sure enough ETH was withdrawn
         require(option.optionInput.premium <= ethReturned, "Didn't burn enough LP tokens");
 
@@ -244,7 +244,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // update user balance
         vs.userVaultBalances[option.bidder][option.optionInput.bidInput.vault] -= strikeLPTokenAmount;
         // withdraw the strike amount from bidder's vault
-        uint256 ethReturned = vault.withdrawEth(
+        uint256 ethReturned = vault.redeemEth(
             strikeLPTokenAmount,
             address(oms.acceptedOptions[optionId].seller),
             address(this)

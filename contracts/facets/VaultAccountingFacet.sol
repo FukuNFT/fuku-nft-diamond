@@ -12,18 +12,23 @@ contract VaultAccountingFacet is IVaultAccounting {
      * @dev Main point of entry into the marketplace
      *
      * @param vaultName The name of the vault as registered in the registry
+     * @param andStake True if user wants to leave vault tokens staked, false if user wants them returned
      */
-    function deposit(bytes12 vaultName) external payable override {
+    function deposit(bytes12 vaultName, bool andStake) external payable override {
         VaultStorage storage vs = LibStorage.vaultStorage();
 
         address vaultAddress = vs.vaultAddresses[vaultName];
         require(vaultAddress != address(0), "Vault does not exist");
 
         // deposit into vault on behalf of sender
-        uint256 lpTokensAmount = IVault(vaultAddress).depositEth{ value: msg.value }(address(this));
-        vs.userVaultBalances[msg.sender][vaultName] += lpTokensAmount;
+        address recipient = andStake ? address(this) : msg.sender;
+        uint256 vaultTokens = IVault(vaultAddress).depositEth{ value: msg.value }(recipient);
 
-        emit DepositEth(msg.sender, vaultName, msg.value, lpTokensAmount);
+        if (andStake) {
+            vs.userVaultBalances[msg.sender][vaultName] += vaultTokens;
+        }
+
+        emit DepositEth(msg.sender, vaultName, msg.value, vaultTokens);
     }
 
     /**
@@ -65,7 +70,7 @@ contract VaultAccountingFacet is IVaultAccounting {
         // update user balance
         vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
         // withdraw from vault and send to recipient
-        uint256 amountWithdrawn = IVault(vaultAddress).withdrawEth(lpTokenAmount, msg.sender, address(this));
+        uint256 amountWithdrawn = IVault(vaultAddress).redeemEth(lpTokenAmount, msg.sender, address(this));
 
         emit Withdraw(msg.sender, vaultName, amountWithdrawn, lpTokenAmount);
     }

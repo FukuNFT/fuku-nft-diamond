@@ -10,7 +10,7 @@ interface IVaultAccounting {
 
     event WithdrawVaultToken(address indexed user, bytes12 indexed vaultName, uint256 amountShares);
 
-    function deposit(bytes12 vaultName) external payable;
+    function deposit(bytes12 vaultName, bool andStake) external payable;
 
     function depositVaultToken(bytes12 vaultName, uint256 amount) external;
 
