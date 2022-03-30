@@ -2,6 +2,8 @@ const { ethers } = require("hardhat");
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 
+// Example of how to generate an airdrop merkle tree
+
 const whitelistAddressesAndAmounts = [
   ["0x2FaDd5D62911A8d40B10898383602EA57f97Be42", ethers.utils.parseEther("2.0")],
   ["0xfa3caab19e6913b6aabdda4e27ac413e96eab0ca", ethers.utils.parseEther("3.0")],

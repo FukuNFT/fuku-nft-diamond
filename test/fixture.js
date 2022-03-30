@@ -1,5 +1,7 @@
 const { ethers, deployments } = require("hardhat");
 const { getSelectors, FacetCutAction } = require("../scripts/libraries/diamond.js");
+const { MerkleTree } = require("merkletreejs");
+const keccak256 = require("keccak256");
 
 const fixture = deployments.createFixture(async () => {
   // get signers
@@ -29,6 +31,7 @@ const fixture = deployments.createFixture(async () => {
     "OptionMarketFacet",
     "VaultAccountingFacet",
     "VaultManagementFacet",
+    "AirdropClaimFacet",
   ];
   const cut = [];
   for (const FacetName of FacetNames) {
@@ -63,6 +66,7 @@ const fixture = deployments.createFixture(async () => {
   const optionMarket = await ethers.getContractAt("IOptionMarket", diamond.address);
   const vaultAccounting = await ethers.getContractAt("IVaultAccounting", diamond.address);
   const vaultManagement = await ethers.getContractAt("IVaultManagement", diamond.address);
+  const airdropClaim = await ethers.getContractAt("IAirdropClaim", diamond.address);
 
   // create vault names
   const vaultNames = {
@@ -76,6 +80,24 @@ const fixture = deployments.createFixture(async () => {
   tx = await vaultManagement.registerVault(vaultNames.empty, emptyVault.address);
   await tx.wait();
 
+  // create merkle tree for airdrop
+  const buf2hex = (x) => "0x" + x.toString("hex");
+  const whitelistAddressesAndAmounts = [
+    [deployer.address, ethers.utils.parseEther("2.0")],
+    [user.address, ethers.utils.parseEther("3.0")],
+  ];
+  const leafNodes = whitelistAddressesAndAmounts.map((entry) =>
+    ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
+  );
+  const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+  const rootHash = merkleTree.getRoot();
+  const deployerProof = merkleTree.getProof(leafNodes[0]).map((x) => buf2hex(x.data));
+  const userProof = merkleTree.getProof(leafNodes[1]).map((x) => buf2hex(x.data));
+
+  // register airdrop merkle root
+  tx = await airdropClaim.setMerkleRoot(rootHash);
+  await tx.wait();
+
   return {
     diamond,
     diamondCut,
@@ -83,9 +105,13 @@ const fixture = deployments.createFixture(async () => {
     optionMarket,
     vaultAccounting,
     vaultManagement,
+    airdropClaim,
     vaultNames,
     testERC721,
     cryptoPunks,
+    whitelistAddressesAndAmounts,
+    rootHash,
+    userProof,
   };
 });
 
