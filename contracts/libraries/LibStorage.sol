@@ -31,12 +31,17 @@ struct AirdropClaimStorage {
     mapping(address => uint256) claimed;
 }
 
+struct RewardsClaimStorage {
+    mapping(address => uint256) rewards;
+}
+
 library LibStorage {
     bytes32 constant BID_MARKET_STORAGE_POSITION = keccak256("fuku.storage.market.bid");
     bytes32 constant OPTION_MARKET_STORAGE_POSTION = keccak256("fuku.storage.market.option");
     bytes32 constant VAULT_STORAGE_POSITION = keccak256("fuku.storage.vault");
     bytes32 constant PUNK_TOKEN_STORAGE_POSITION = keccak256("fuku.storage.punk.token");
     bytes32 constant AIRDROP_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.airdrop.claim");
+    bytes32 constant REWARDS_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.rewards.claim");
 
     function bidMarketStorage() internal pure returns (BidMarketStorage storage bms) {
         bytes32 position = BID_MARKET_STORAGE_POSITION;
@@ -70,6 +75,13 @@ library LibStorage {
         bytes32 position = AIRDROP_CLAIM_STORAGE_POSITION;
         assembly {
             acs.slot := position
+        }
+    }
+
+    function rewardsClaimStorage() internal pure returns (RewardsClaimStorage storage rcs) {
+        bytes32 position = REWARDS_CLAIM_STORAGE_POSITION;
+        assembly {
+            rcs.slot := position
         }
     }
 }
