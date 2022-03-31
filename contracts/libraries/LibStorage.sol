@@ -23,11 +23,20 @@ struct PunkTokenStorage {
     address punkToken;
 }
 
+struct AirdropClaimStorage {
+    bytes32 merkleRoot;
+    address token;
+    uint256 totalAmount; // todo: unused
+    uint256 initialUnlockBps; // todo: unused
+    mapping(address => uint256) claimed;
+}
+
 library LibStorage {
     bytes32 constant BID_MARKET_STORAGE_POSITION = keccak256("fuku.storage.market.bid");
     bytes32 constant OPTION_MARKET_STORAGE_POSTION = keccak256("fuku.storage.market.option");
     bytes32 constant VAULT_STORAGE_POSITION = keccak256("fuku.storage.vault");
     bytes32 constant PUNK_TOKEN_STORAGE_POSITION = keccak256("fuku.storage.punk.token");
+    bytes32 constant AIRDROP_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.airdrop.claim");
 
     function bidMarketStorage() internal pure returns (BidMarketStorage storage bms) {
         bytes32 position = BID_MARKET_STORAGE_POSITION;
@@ -54,6 +63,13 @@ library LibStorage {
         bytes32 position = PUNK_TOKEN_STORAGE_POSITION;
         assembly {
             pts.slot := position
+        }
+    }
+
+    function airdropClaimStorage() internal pure returns (AirdropClaimStorage storage acs) {
+        bytes32 position = AIRDROP_CLAIM_STORAGE_POSITION;
+        assembly {
+            acs.slot := position
         }
     }
 }

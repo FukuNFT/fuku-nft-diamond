@@ -12,16 +12,20 @@ pragma solidity ^0.8.0;
 * Implementation of a diamond.
 /******************************************************************************/
 
+import { AirdropInit } from "./FukuTypes.sol";
 import { LibDiamond } from "./vendor/libraries/LibDiamond.sol";
 import { IDiamondLoupe } from "./vendor/interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "./vendor/interfaces/IDiamondCut.sol";
 import { IERC173 } from "./vendor/interfaces/IERC173.sol";
 import { IERC165 } from "./vendor/interfaces/IERC165.sol";
-import { LibStorage, PunkTokenStorage } from "./libraries/LibStorage.sol";
+import { LibStorage, PunkTokenStorage, AirdropClaimStorage } from "./libraries/LibStorage.sol";
 import { IVaultAccounting } from "./interfaces/facets/IVaultAccounting.sol";
 import { IVaultManagement } from "./interfaces/facets/IVaultManagement.sol";
 import { IBidMarket } from "./interfaces/facets/IBidMarket.sol";
 import { IOptionMarket } from "./interfaces/facets/IOptionMarket.sol";
+import { IAirdropClaim } from "./interfaces/facets/IAirdropClaim.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -30,7 +34,7 @@ import { IOptionMarket } from "./interfaces/facets/IOptionMarket.sol";
 contract FukuInit {
     // You can add parameters to this function in order to pass in
     // data to set your own state variables
-    function init(address cryptoPunks) external {
+    function init(address cryptoPunks, AirdropInit calldata airdropInitParams) external {
         // adding ERC165 data
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
@@ -41,6 +45,7 @@ contract FukuInit {
         ds.supportedInterfaces[type(IVaultManagement).interfaceId] = true;
         ds.supportedInterfaces[type(IBidMarket).interfaceId] = true;
         ds.supportedInterfaces[type(IOptionMarket).interfaceId] = true;
+        ds.supportedInterfaces[type(IAirdropClaim).interfaceId] = true;
 
         // add your own state variables
         // EIP-2535 specifies that the `diamondCut` function takes two optional
@@ -50,5 +55,13 @@ contract FukuInit {
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
         PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
         pts.punkToken = cryptoPunks;
+
+        AirdropClaimStorage storage acs = LibStorage.airdropClaimStorage();
+        acs.merkleRoot = airdropInitParams.merkleRoot;
+        acs.token = airdropInitParams.token;
+        acs.totalAmount = airdropInitParams.totalAmount;
+        acs.initialUnlockBps = airdropInitParams.initialUnlockBps;
+
+        IERC20(airdropInitParams.token).transferFrom(msg.sender, address(this), airdropInitParams.totalAmount);
     }
 }
