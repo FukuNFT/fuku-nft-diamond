@@ -55,8 +55,34 @@ const fixture = deployments.createFixture(async () => {
   const cryptoPunks = await CryptoPunks.deploy();
   await cryptoPunks.deployed();
 
+  // create a test Fuku token
+  const FukuToken = await ethers.getContractFactory("TestFukuToken");
+  const fukuToken = await FukuToken.deploy("Fuku", "FUKU");
+  await fukuToken.deployed();
+
+  // create merkle tree for airdrop
+  const buf2hex = (x) => "0x" + x.toString("hex");
+  const whitelistAddressesAndAmounts = [
+    [deployer.address, ethers.utils.parseEther("2.0")],
+    [user.address, ethers.utils.parseEther("3.0")],
+  ];
+  const leafNodes = whitelistAddressesAndAmounts.map((entry) =>
+    ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
+  );
+  const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+  const rootHash = merkleTree.getRoot();
+  const deployerProof = merkleTree.getProof(leafNodes[0]).map((x) => buf2hex(x.data));
+  const userProof = merkleTree.getProof(leafNodes[1]).map((x) => buf2hex(x.data));
+  const totalAirdropAmount = ethers.utils.parseEther("1000");
+  const initialUnlockBps = 3000;
+  tx = await fukuToken.approve(diamond.address, totalAirdropAmount);
+  await tx.wait();
+
   // call to diamond cut
-  const calldata = fukuInit.interface.encodeFunctionData("init", [cryptoPunks.address]);
+  const calldata = fukuInit.interface.encodeFunctionData("init", [
+    cryptoPunks.address,
+    [rootHash, fukuToken.address, totalAirdropAmount, initialUnlockBps],
+  ]);
   const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
   tx = await diamondCut.diamondCut(cut, fukuInit.address, calldata);
   await tx.wait();
@@ -80,24 +106,6 @@ const fixture = deployments.createFixture(async () => {
   tx = await vaultManagement.registerVault(vaultNames.empty, emptyVault.address);
   await tx.wait();
 
-  // create merkle tree for airdrop
-  const buf2hex = (x) => "0x" + x.toString("hex");
-  const whitelistAddressesAndAmounts = [
-    [deployer.address, ethers.utils.parseEther("2.0")],
-    [user.address, ethers.utils.parseEther("3.0")],
-  ];
-  const leafNodes = whitelistAddressesAndAmounts.map((entry) =>
-    ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
-  );
-  const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
-  const rootHash = merkleTree.getRoot();
-  const deployerProof = merkleTree.getProof(leafNodes[0]).map((x) => buf2hex(x.data));
-  const userProof = merkleTree.getProof(leafNodes[1]).map((x) => buf2hex(x.data));
-
-  // register airdrop merkle root
-  tx = await airdropClaim.setMerkleRoot(rootHash);
-  await tx.wait();
-
   return {
     diamond,
     diamondCut,
@@ -109,8 +117,10 @@ const fixture = deployments.createFixture(async () => {
     vaultNames,
     testERC721,
     cryptoPunks,
+    fukuToken,
     whitelistAddressesAndAmounts,
     rootHash,
+    deployerProof,
     userProof,
   };
 });
