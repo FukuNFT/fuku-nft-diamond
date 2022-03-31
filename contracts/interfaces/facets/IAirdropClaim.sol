@@ -4,7 +4,5 @@ pragma solidity ^0.8.0;
 interface IAirdropClaim {
     event AirdropClaim(address user, uint256 amount);
 
-    function setMerkleRoot(bytes32 merkleRoot) external;
-
     function claimAirdrop(uint256 amount, bytes32[] calldata merkleProof) external;
 }
