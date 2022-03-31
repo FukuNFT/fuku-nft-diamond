@@ -25,6 +25,9 @@ struct PunkTokenStorage {
 
 struct AirdropClaimStorage {
     bytes32 merkleRoot;
+    address token;
+    uint256 totalAmount; // todo: unused
+    uint256 initialUnlockBps; // todo: unused
     mapping(address => uint256) claimed;
 }
 
