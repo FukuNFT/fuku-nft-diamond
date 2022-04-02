@@ -32,6 +32,7 @@ const fixture = deployments.createFixture(async () => {
     "VaultAccountingFacet",
     "VaultManagementFacet",
     "AirdropClaimFacet",
+    "RewardsClaimFacet",
   ];
   const cut = [];
   for (const FacetName of FacetNames) {
@@ -93,6 +94,7 @@ const fixture = deployments.createFixture(async () => {
   const vaultAccounting = await ethers.getContractAt("IVaultAccounting", diamond.address);
   const vaultManagement = await ethers.getContractAt("IVaultManagement", diamond.address);
   const airdropClaim = await ethers.getContractAt("IAirdropClaim", diamond.address);
+  const rewardsClaim = await ethers.getContractAt("IRewardsClaim", diamond.address);
 
   // create vault names
   const vaultNames = {
@@ -114,6 +116,7 @@ const fixture = deployments.createFixture(async () => {
     vaultAccounting,
     vaultManagement,
     airdropClaim,
+    rewardsClaim,
     vaultNames,
     testERC721,
     cryptoPunks,
