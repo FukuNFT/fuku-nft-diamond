@@ -35,6 +35,15 @@ struct RewardsClaimStorage {
     mapping(address => uint256) rewards;
 }
 
+struct RewardsManagementStorage {
+    uint256 nextEpochId;
+    uint256 epochDuration;
+    mapping(uint256 => uint256) epochEndings;
+    mapping(uint256 => uint256) depositsAllocation;
+    mapping(uint256 => uint256) salesAllocation;
+    mapping(uint256 => mapping(address => uint256)) collectionAllocation;
+}
+
 library LibStorage {
     bytes32 constant BID_MARKET_STORAGE_POSITION = keccak256("fuku.storage.market.bid");
     bytes32 constant OPTION_MARKET_STORAGE_POSTION = keccak256("fuku.storage.market.option");
@@ -42,6 +51,7 @@ library LibStorage {
     bytes32 constant PUNK_TOKEN_STORAGE_POSITION = keccak256("fuku.storage.punk.token");
     bytes32 constant AIRDROP_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.airdrop.claim");
     bytes32 constant REWARDS_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.rewards.claim");
+    bytes32 constant REWARDS_MANAGEMENT_STORAGE_POSITION = keccak256("fuku.storage.rewards.management");
 
     function bidMarketStorage() internal pure returns (BidMarketStorage storage bms) {
         bytes32 position = BID_MARKET_STORAGE_POSITION;
@@ -82,6 +92,13 @@ library LibStorage {
         bytes32 position = REWARDS_CLAIM_STORAGE_POSITION;
         assembly {
             rcs.slot := position
+        }
+    }
+
+    function rewardsManagementStorage() internal pure returns (RewardsManagementStorage storage rms) {
+        bytes32 position = REWARDS_MANAGEMENT_STORAGE_POSITION;
+        assembly {
+            rms.slot := position
         }
     }
 }
