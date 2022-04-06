@@ -19,13 +19,13 @@ struct VaultStorage {
     mapping(address => mapping(bytes12 => uint256)) userVaultBalances;
 }
 
-struct PunkTokenStorage {
+struct TokenAddressStorage {
     address punkToken;
+    address fukuToken;
 }
 
 struct AirdropClaimStorage {
     bytes32 merkleRoot;
-    address token;
     uint256 totalAmount; // todo: unused
     uint256 initialUnlockBps; // todo: unused
     mapping(address => uint256) claimed;
@@ -43,12 +43,12 @@ struct RewardsManagementStorage {
     mapping(uint256 => uint256) depositsAllocation;
     mapping(uint256 => uint256) salesAllocation;
     mapping(uint256 => mapping(address => uint256)) collectionAllocation;
+    mapping(uint256 => mapping(address => uint256)) floorPrices;
     address[] rewardedCollections;
 }
 
 struct BidRewardsStorage {
     mapping(uint256 => mapping(address => uint256)) totalCollectionBids;
-    mapping(uint256 => mapping(address => uint256)) floorPrices;
     mapping(uint256 => mapping(address => mapping(address => uint256))) competitiveBids;
 }
 
@@ -64,7 +64,7 @@ library LibStorage {
     bytes32 constant BID_MARKET_STORAGE_POSITION = keccak256("fuku.storage.market.bid");
     bytes32 constant OPTION_MARKET_STORAGE_POSTION = keccak256("fuku.storage.market.option");
     bytes32 constant VAULT_STORAGE_POSITION = keccak256("fuku.storage.vault");
-    bytes32 constant PUNK_TOKEN_STORAGE_POSITION = keccak256("fuku.storage.punk.token");
+    bytes32 constant TOKEN_ADDRESS_STORAGE_POSITION = keccak256("fuku.storage.token.address");
     bytes32 constant AIRDROP_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.airdrop.claim");
     bytes32 constant REWARDS_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.rewards.claim");
     bytes32 constant REWARDS_MANAGEMENT_STORAGE_POSITION = keccak256("fuku.storage.rewards.management");
@@ -93,10 +93,10 @@ library LibStorage {
         }
     }
 
-    function punkTokenStorage() internal pure returns (PunkTokenStorage storage pts) {
-        bytes32 position = PUNK_TOKEN_STORAGE_POSITION;
+    function tokenAddressStorage() internal pure returns (TokenAddressStorage storage tas) {
+        bytes32 position = TOKEN_ADDRESS_STORAGE_POSITION;
         assembly {
-            pts.slot := position
+            tas.slot := position
         }
     }
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IAirdropClaim } from "../interfaces/facets/IAirdropClaim.sol";
-import { LibStorage, AirdropClaimStorage } from "../libraries/LibStorage.sol";
+import { LibStorage, AirdropClaimStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibDiamond } from "../vendor/libraries/LibDiamond.sol";
 
 import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -17,6 +17,7 @@ contract AirdropClaimFacet is IAirdropClaim {
      */
     function claimAirdrop(uint256 amount, bytes32[] calldata merkleProof) external override {
         AirdropClaimStorage storage acs = LibStorage.airdropClaimStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         // verify the proof
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender, amount));
@@ -28,7 +29,7 @@ contract AirdropClaimFacet is IAirdropClaim {
         // update the user's claim
         acs.claimed[msg.sender] += amount;
 
-        IERC20(acs.token).transfer(msg.sender, amount);
+        IERC20(tas.fukuToken).transfer(msg.sender, amount);
 
         emit AirdropClaim(msg.sender, amount);
     }
