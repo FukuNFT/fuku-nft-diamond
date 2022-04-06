@@ -31,6 +31,7 @@ struct AirdropClaimStorage {
     mapping(address => uint256) claimed;
 }
 
+// todo: is this actually needed?
 struct RewardsClaimStorage {
     mapping(address => uint256) rewards;
 }
@@ -42,11 +43,13 @@ struct RewardsManagementStorage {
     mapping(uint256 => uint256) depositsAllocation;
     mapping(uint256 => uint256) salesAllocation;
     mapping(uint256 => mapping(address => uint256)) collectionAllocation;
+    address[] rewardedCollections;
 }
 
 struct BidRewardsStorage {
+    mapping(uint256 => mapping(address => uint256)) totalCollectionBids;
     mapping(uint256 => mapping(address => uint256)) floorPrices;
-    mapping(uint256 => mapping(address => uint256)) competitiveBids;
+    mapping(uint256 => mapping(address => mapping(address => uint256))) competitiveBids;
 }
 
 struct DepositsRewardsStorage {

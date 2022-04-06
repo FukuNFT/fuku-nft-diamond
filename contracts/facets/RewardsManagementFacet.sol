@@ -56,6 +56,7 @@ contract RewardsManagementFacet is IRewardsManagement {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
         rms.collectionAllocation[rms.nextEpochId][nftCollection] = allocationAmount;
+        rms.rewardedCollections.push(nftCollection);
 
         emit CollectionAllocated(rms.nextEpochId, nftCollection, allocationAmount);
     }

@@ -20,7 +20,8 @@ library LibCompetitiveBidUtils {
         // todo: finalize competitive bid definition
         uint256 floorPrice = brs.floorPrices[currentEpoch][collection];
         if (floorPrice > 0 && isCompetitiveBid(floorPrice, bidAmount)) {
-            brs.competitiveBids[currentEpoch][user]++;
+            brs.competitiveBids[currentEpoch][collection][user]++;
+            brs.totalCollectionBids[currentEpoch][collection];
         }
     }
 
@@ -41,13 +42,33 @@ library LibCompetitiveBidUtils {
         uint256 floorPrice = brs.floorPrices[currentEpoch][collection];
         if (floorPrice > 0 && isCompetitiveBid(floorPrice, bidAmount)) {
             // really this should never be the case where the bid amount is greater than 0, but safety check anyway
-            if (brs.competitiveBids[currentEpoch][user] > 0) {
-                brs.competitiveBids[currentEpoch][user]--;
+            if (brs.competitiveBids[currentEpoch][collection][user] > 0) {
+                brs.competitiveBids[currentEpoch][collection][user]--;
             }
         }
     }
 
     function isCompetitiveBid(uint256 floorPrice, uint256 bidAmount) internal pure returns (bool) {
         return bidAmount > floorPrice;
+    }
+
+    function calculateUserBidRewards(uint256 epoch, address user) internal view returns (uint256) {
+        BidRewardsStorage storage brs = LibStorage.bidRewardsStorage();
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+
+        uint256 userBidRewards;
+        for (uint256 i = 0; i < rms.rewardedCollections.length; ++i) {
+            address collection = rms.rewardedCollections[i];
+            uint256 collectionAllocation = rms.collectionAllocation[epoch][collection];
+            uint256 totalCollectionBids = brs.totalCollectionBids[epoch][collection];
+            uint256 userBids = brs.competitiveBids[epoch][collection][user];
+
+            // calculate user share of rewards
+            if (userBids > 0 && totalCollectionBids > 0) {
+                userBidRewards += (userBids * collectionAllocation) / totalCollectionBids;
+            }
+        }
+
+        return userBidRewards;
     }
 }
