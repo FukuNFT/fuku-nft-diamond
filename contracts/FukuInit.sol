@@ -24,6 +24,7 @@ import { IVaultManagement } from "./interfaces/facets/IVaultManagement.sol";
 import { IBidMarket } from "./interfaces/facets/IBidMarket.sol";
 import { IOptionMarket } from "./interfaces/facets/IOptionMarket.sol";
 import { IAirdropClaim } from "./interfaces/facets/IAirdropClaim.sol";
+import { IRewardsManagement } from "./interfaces/facets/IRewardsManagement.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -46,6 +47,7 @@ contract FukuInit {
         ds.supportedInterfaces[type(IBidMarket).interfaceId] = true;
         ds.supportedInterfaces[type(IOptionMarket).interfaceId] = true;
         ds.supportedInterfaces[type(IAirdropClaim).interfaceId] = true;
+        ds.supportedInterfaces[type(IRewardsManagement).interfaceId] = true;
 
         // add your own state variables
         // EIP-2535 specifies that the `diamondCut` function takes two optional
