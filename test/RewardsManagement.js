@@ -26,13 +26,16 @@ describe("Rewards Management", async () => {
     epochDuration = 604800; // 1 week
     collection = testERC721.address;
     collectionAllocation = ethers.utils.parseEther("15.0");
+    collectionFloorPrice = ethers.utils.parseEther("1.0");
     depositsAllocation = ethers.utils.parseEther("10.0");
     salesAllocation = ethers.utils.parseEther("5.0");
   });
 
   describe("Setting epoch parameters", async () => {
     it("should emit an event when allocating the collection rewards", async () => {
-      await expect(await rewardsManagement.setCollectionAllocation(collection, collectionAllocation))
+      await expect(
+        await rewardsManagement.setCollectionAllocation(collection, collectionAllocation, collectionFloorPrice)
+      )
         .to.emit(rewardsManagement, "CollectionAllocated")
         .withArgs(0, collection, collectionAllocation);
     });
@@ -57,7 +60,7 @@ describe("Rewards Management", async () => {
 
     it("should fail to set collection rewards when not diamond owner", async () => {
       await expect(
-        rewardsManagement.connect(user).setCollectionAllocation(collection, collectionAllocation)
+        rewardsManagement.connect(user).setCollectionAllocation(collection, collectionAllocation, collectionFloorPrice)
       ).to.be.revertedWith("LibDiamond: Must be contract owner");
     });
 

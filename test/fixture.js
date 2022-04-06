@@ -77,7 +77,7 @@ const fixture = deployments.createFixture(async () => {
   const userProof = merkleTree.getProof(leafNodes[1]).map((x) => buf2hex(x.data));
   const totalAirdropAmount = ethers.utils.parseEther("1000");
   const initialUnlockBps = 3000;
-  tx = await fukuToken.approve(diamond.address, totalAirdropAmount);
+  tx = await fukuToken.approve(diamond.address, ethers.utils.parseEther("10000"));
   await tx.wait();
 
   // call to diamond cut

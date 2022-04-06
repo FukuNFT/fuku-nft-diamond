@@ -18,10 +18,10 @@ library LibCompetitiveBidUtils {
         // check if collection was selected for rewards (floor price of collection set)
         // and if bid amount qualifies as competitive bid
         // todo: finalize competitive bid definition
-        uint256 floorPrice = brs.floorPrices[currentEpoch][collection];
+        uint256 floorPrice = rms.floorPrices[currentEpoch][collection];
         if (floorPrice > 0 && isCompetitiveBid(floorPrice, bidAmount)) {
             brs.competitiveBids[currentEpoch][collection][user]++;
-            brs.totalCollectionBids[currentEpoch][collection];
+            brs.totalCollectionBids[currentEpoch][collection]++;
         }
     }
 
@@ -39,11 +39,12 @@ library LibCompetitiveBidUtils {
         // check if collection was selected for rewards (floor price of collection set)
         // and if bid amount qualifies as competitive bid
         // todo: finalize competitive bid definition
-        uint256 floorPrice = brs.floorPrices[currentEpoch][collection];
+        uint256 floorPrice = rms.floorPrices[currentEpoch][collection];
         if (floorPrice > 0 && isCompetitiveBid(floorPrice, bidAmount)) {
             // really this should never be the case where the bid amount is greater than 0, but safety check anyway
             if (brs.competitiveBids[currentEpoch][collection][user] > 0) {
                 brs.competitiveBids[currentEpoch][collection][user]--;
+                brs.totalCollectionBids[currentEpoch][collection]--;
             }
         }
     }

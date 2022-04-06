@@ -2,8 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { IRewardsManagement } from "../interfaces/facets/IRewardsManagement.sol";
-import { LibStorage, RewardsManagementStorage } from "../libraries/LibStorage.sol";
+import { LibStorage, RewardsManagementStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibDiamond } from "../vendor/libraries/LibDiamond.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract RewardsManagementFacet is IRewardsManagement {
     /**
@@ -51,12 +53,22 @@ contract RewardsManagementFacet is IRewardsManagement {
      *
      * @param nftCollection The NFT collection
      * @param allocationAmount The allocation amount
+     * @param floorPrice The floor price
      */
-    function setCollectionAllocation(address nftCollection, uint256 allocationAmount) external override onlyOwner {
+    function setCollectionAllocation(
+        address nftCollection,
+        uint256 allocationAmount,
+        uint256 floorPrice
+    ) external override onlyOwner {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         rms.collectionAllocation[rms.nextEpochId][nftCollection] = allocationAmount;
+        rms.floorPrices[rms.nextEpochId][nftCollection] = floorPrice;
         rms.rewardedCollections.push(nftCollection);
+
+        // transfer in tokens
+        IERC20(tas.fukuToken).transferFrom(msg.sender, address(this), allocationAmount);
 
         emit CollectionAllocated(rms.nextEpochId, nftCollection, allocationAmount);
     }
@@ -68,8 +80,12 @@ contract RewardsManagementFacet is IRewardsManagement {
      */
     function setDepositsAllocation(uint256 allocationAmount) external override onlyOwner {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         rms.depositsAllocation[rms.nextEpochId] = allocationAmount;
+
+        // transfer in tokens
+        IERC20(tas.fukuToken).transferFrom(msg.sender, address(this), allocationAmount);
 
         emit DepositsAllocated(rms.nextEpochId, allocationAmount);
     }
@@ -81,8 +97,12 @@ contract RewardsManagementFacet is IRewardsManagement {
      */
     function setSalesAllocation(uint256 allocationAmount) external override onlyOwner {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         rms.salesAllocation[rms.nextEpochId] = allocationAmount;
+
+        // transfer in tokens
+        IERC20(tas.fukuToken).transferFrom(msg.sender, address(this), allocationAmount);
 
         emit SalesAllocated(rms.nextEpochId, allocationAmount);
     }
