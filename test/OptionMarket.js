@@ -309,7 +309,7 @@ describe("Option Market", async () => {
     });
   });
 
-  describe("Exercising option bids:", async () => {
+  describe("Exercising option bids", async () => {
     beforeEach(async () => {
       // deposit more funds
       const amount = ethers.utils.parseEther("3.0");

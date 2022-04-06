@@ -20,12 +20,13 @@ contract RewardsManagementFacet is IRewardsManagement {
     function startEpoch() external override onlyOwner {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
-        // verify epoch has not already begun
-        require(rms.epochEndings[rms.nextEpochId] == 0, "Epoch already started");
         // verify the epoch duration has been set
         require(rms.epochDuration > 0, "Epoch duration not set");
+        // verify epoch has not already begun
+        uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+        require(block.timestamp > rms.epochEndings[currentEpoch], "Epoch has not ended");
 
-        uint256 currentEpoch = rms.nextEpochId++;
+        currentEpoch = rms.nextEpochId++;
         uint256 epochEnd = block.timestamp + rms.epochDuration;
         rms.epochEndings[currentEpoch] = epochEnd;
 

@@ -3,7 +3,7 @@ const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
 
-describe("RewardsClaim", async () => {
+describe("Rewards Claim", async () => {
   // fixture values
   let deployer, user;
   let rewardsClaim;
