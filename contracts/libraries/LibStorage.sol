@@ -31,11 +31,6 @@ struct AirdropClaimStorage {
     mapping(address => uint256) claimed;
 }
 
-// todo: is this actually needed?
-struct RewardsClaimStorage {
-    mapping(address => uint256) rewards;
-}
-
 struct RewardsManagementStorage {
     uint256 nextEpochId;
     uint256 epochDuration;
@@ -66,7 +61,6 @@ library LibStorage {
     bytes32 constant VAULT_STORAGE_POSITION = keccak256("fuku.storage.vault");
     bytes32 constant TOKEN_ADDRESS_STORAGE_POSITION = keccak256("fuku.storage.token.address");
     bytes32 constant AIRDROP_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.airdrop.claim");
-    bytes32 constant REWARDS_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.rewards.claim");
     bytes32 constant REWARDS_MANAGEMENT_STORAGE_POSITION = keccak256("fuku.storage.rewards.management");
     bytes32 constant BIDS_REWARDS_STORAGE_POSITION = keccak256("fuku.storage.bids.rewards");
     bytes32 constant DEPOSITS_REWARDS_STORAGE_POSITION = keccak256("fuku.storage.deposits.rewards");
@@ -104,13 +98,6 @@ library LibStorage {
         bytes32 position = AIRDROP_CLAIM_STORAGE_POSITION;
         assembly {
             acs.slot := position
-        }
-    }
-
-    function rewardsClaimStorage() internal pure returns (RewardsClaimStorage storage rcs) {
-        bytes32 position = REWARDS_CLAIM_STORAGE_POSITION;
-        assembly {
-            rcs.slot := position
         }
     }
 
