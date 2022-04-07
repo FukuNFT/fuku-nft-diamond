@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IRewardsClaim } from "../interfaces/facets/IRewardsClaim.sol";
-import { LibCompetitiveBidUtils } from "../libraries/LibCompetitiveBidUtils.sol";
+import { LibRewardsUtils } from "../libraries/LibRewardsUtils.sol";
 import { LibStorage, TokenAddressStorage, RewardsManagementStorage } from "../libraries/LibStorage.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -21,7 +21,7 @@ contract RewardsClaimFacet is IRewardsClaim {
 
         // calculate
         uint256 userRewards;
-        uint256 userBidRewards = LibCompetitiveBidUtils.calculateUserBidRewards(epoch, msg.sender);
+        uint256 userBidRewards = LibRewardsUtils.calculateUserBidRewards(epoch, msg.sender);
         // todo: other rewards
         userRewards += userBidRewards;
         require(userRewards > 0, "User has no rewards");

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { LibStorage, BidRewardsStorage, RewardsManagementStorage } from "./LibStorage.sol";
 
-library LibCompetitiveBidUtils {
+library LibRewardsUtils {
     function checkForCompetitiveBidIncrement(
         address user,
         address collection,

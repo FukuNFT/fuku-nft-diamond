@@ -52,7 +52,8 @@ struct DepositsRewardsStorage {
 }
 
 struct SalesRewardsStorage {
-    mapping(uint256 => mapping(address => uint256)) sales;
+    mapping(uint256 => mapping(address => uint256)) totalCollectionSales;
+    mapping(uint256 => mapping(address => mapping(address => uint256))) sales;
 }
 
 library LibStorage {
