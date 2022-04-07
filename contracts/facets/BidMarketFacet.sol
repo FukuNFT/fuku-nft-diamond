@@ -186,6 +186,9 @@ contract BidMarketFacet is IBidMarket {
             IERC721(bidInfo.bidInput.nft).safeTransferFrom(msg.sender, bidInfo.bidder, bidInfo.bidInput.nftIndex);
         }
 
+        // check if user earns rewards
+        LibRewardsUtils.checkForSaleReward(msg.sender, bidInfo.bidInput.nft);
+
         delete bms.bids[bidId];
         emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInput.amount);
     }

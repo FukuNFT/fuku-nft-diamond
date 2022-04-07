@@ -21,9 +21,9 @@ contract RewardsClaimFacet is IRewardsClaim {
 
         // calculate
         uint256 userRewards;
-        uint256 userBidRewards = LibRewardsUtils.calculateUserBidRewards(epoch, msg.sender);
+        userRewards += LibRewardsUtils.calculateUserBidRewards(epoch, msg.sender);
+        userRewards += LibRewardsUtils.calculateUserSalesRewards(epoch, msg.sender);
         // todo: other rewards
-        userRewards += userBidRewards;
         require(userRewards > 0, "User has no rewards");
 
         // transfer the rewards tokens
