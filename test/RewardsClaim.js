@@ -12,6 +12,7 @@ describe("Rewards Claim", async () => {
   let bidMarket;
   let testERC721;
   let vaultNames;
+  let fukuToken;
 
   // rewards parameters
   let epochDuration;
@@ -24,8 +25,9 @@ describe("Rewards Claim", async () => {
 
   beforeEach(async () => {
     // initialize fixture values
-    ({ rewardsClaim, rewardsManagement, bidMarket, vaultAccounting, testERC721, vaultNames } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    ({ rewardsClaim, rewardsManagement, bidMarket, vaultAccounting, testERC721, vaultNames, fukuToken } =
+      await fixture());
+    [deployer, user, user2] = await ethers.getSigners();
     rewardsClaim = rewardsClaim.connect(user);
 
     // initialize rewards parameters
@@ -60,8 +62,71 @@ describe("Rewards Claim", async () => {
   });
 
   it("should successfully emit event when claiming rewards", async () => {
-    await expect(await rewardsClaim.connect(user).claimRewards(currentEpoch))
+    await expect(await rewardsClaim.claimRewards(currentEpoch))
       .to.emit(rewardsClaim, "RewardsClaim")
       .withArgs(user.address, currentEpoch, expectedRewards);
+  });
+
+  it("should successfully transfer expect reward tokens", async () => {
+    const userBalBefore = await fukuToken.balanceOf(user.address);
+
+    tx = await rewardsClaim.claimRewards(currentEpoch);
+    await tx.wait();
+
+    const userBalAfter = await fukuToken.balanceOf(user.address);
+
+    expect(userBalAfter.sub(userBalBefore)).to.equal(expectedRewards);
+  });
+
+  it("should succesfully distribute rewards to more than one user", async () => {
+    // setup for user 2
+    tx = await vaultAccounting.connect(user2).deposit(vaultNames.empty, { value: ethers.utils.parseEther("5.0") });
+    await tx.wait();
+
+    // set up next epoch
+    tx = await rewardsManagement.setCollectionAllocation(collection, collectionAllocation, collectionFloorPrice);
+    await tx.wait();
+    tx = await rewardsManagement.startEpoch();
+    await tx.wait();
+
+    // user place 1 competitive bid
+    tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, nftId, bidAmount]);
+    await tx.wait();
+
+    // user2 place 2 competitive bids
+    tx = await bidMarket.connect(user2).placeBid([vaultNames.empty, collection, nftId, bidAmount]);
+    await tx.wait();
+    tx = await bidMarket.connect(user2).placeBid([vaultNames.empty, collection, nftId, bidAmount]);
+    await tx.wait();
+
+    // advance time past expiry
+    await ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
+
+    const expectedRewardsUser = ethers.utils.parseEther("5.0");
+    const expectedRewardsUser2 = ethers.utils.parseEther("10.0");
+    // claim for user 1
+    await expect(await rewardsClaim.connect(user).claimRewards(currentEpoch + 1))
+      .to.emit(rewardsClaim, "RewardsClaim")
+      .withArgs(user.address, currentEpoch + 1, expectedRewardsUser);
+    // claim for user 2
+    await expect(await rewardsClaim.connect(user2).claimRewards(currentEpoch + 1))
+      .to.emit(rewardsClaim, "RewardsClaim")
+      .withArgs(user2.address, currentEpoch + 1, expectedRewardsUser2);
+  });
+
+  it("should fail to claim rewards if epoch has not started", async () => {
+    await expect(rewardsClaim.claimRewards(1)).to.be.revertedWith("Epoch not started");
+  });
+
+  it("should fail to claim rewards if epoch has not ended", async () => {
+    // start a new epoch
+    tx = await rewardsManagement.startEpoch();
+    await tx.wait();
+
+    await expect(rewardsClaim.claimRewards(1)).to.be.revertedWith("Epoch not ended");
+  });
+
+  it("should fail to claim rewards if user has none", async () => {
+    await expect(rewardsClaim.connect(deployer).claimRewards(currentEpoch)).to.be.revertedWith("User has no rewards");
   });
 });

@@ -65,7 +65,7 @@ contract RewardsManagementFacet is IRewardsManagement {
 
         rms.collectionAllocation[rms.nextEpochId][nftCollection] = allocationAmount;
         rms.floorPrices[rms.nextEpochId][nftCollection] = floorPrice;
-        rms.rewardedCollections.push(nftCollection);
+        rms.rewardedCollections[rms.nextEpochId].push(nftCollection);
 
         // transfer in tokens
         IERC20(tas.fukuToken).transferFrom(msg.sender, address(this), allocationAmount);

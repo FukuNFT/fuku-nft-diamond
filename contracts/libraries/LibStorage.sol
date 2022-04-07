@@ -44,7 +44,7 @@ struct RewardsManagementStorage {
     mapping(uint256 => uint256) salesAllocation;
     mapping(uint256 => mapping(address => uint256)) collectionAllocation;
     mapping(uint256 => mapping(address => uint256)) floorPrices;
-    address[] rewardedCollections;
+    mapping(uint256 => address[]) rewardedCollections;
 }
 
 struct BidRewardsStorage {

@@ -58,8 +58,8 @@ library LibCompetitiveBidUtils {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
         uint256 userBidRewards;
-        for (uint256 i = 0; i < rms.rewardedCollections.length; ++i) {
-            address collection = rms.rewardedCollections[i];
+        for (uint256 i = 0; i < rms.rewardedCollections[epoch].length; ++i) {
+            address collection = rms.rewardedCollections[epoch][i];
             uint256 collectionAllocation = rms.collectionAllocation[epoch][collection];
             uint256 totalCollectionBids = brs.totalCollectionBids[epoch][collection];
             uint256 userBids = brs.competitiveBids[epoch][collection][user];
