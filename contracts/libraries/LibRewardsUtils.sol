@@ -4,6 +4,13 @@ pragma solidity ^0.8.0;
 import { LibStorage, BidRewardsStorage, RewardsManagementStorage } from "./LibStorage.sol";
 
 library LibRewardsUtils {
+    function getCurrentEpoch() internal view returns (uint256 currentEpoch) {
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+
+        // get the current epoch
+        currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+    }
+
     function checkForCompetitiveBidIncrement(
         address user,
         address collection,
@@ -13,7 +20,7 @@ library LibRewardsUtils {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
         // get the current epoch
-        uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+        uint256 currentEpoch = getCurrentEpoch();
 
         // check if collection was selected for rewards (floor price of collection set)
         // and if bid amount qualifies as competitive bid
@@ -34,7 +41,7 @@ library LibRewardsUtils {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
         // get the current epoch
-        uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+        uint256 currentEpoch = getCurrentEpoch();
 
         // check if collection was selected for rewards (floor price of collection set)
         // and if bid amount qualifies as competitive bid
