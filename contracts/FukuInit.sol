@@ -18,7 +18,7 @@ import { IDiamondLoupe } from "./vendor/interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "./vendor/interfaces/IDiamondCut.sol";
 import { IERC173 } from "./vendor/interfaces/IERC173.sol";
 import { IERC165 } from "./vendor/interfaces/IERC165.sol";
-import { LibStorage, PunkTokenStorage, AirdropClaimStorage } from "./libraries/LibStorage.sol";
+import { LibStorage, TokenAddressStorage, AirdropClaimStorage } from "./libraries/LibStorage.sol";
 import { IVaultAccounting } from "./interfaces/facets/IVaultAccounting.sol";
 import { IVaultManagement } from "./interfaces/facets/IVaultManagement.sol";
 import { IBidMarket } from "./interfaces/facets/IBidMarket.sol";
@@ -55,12 +55,12 @@ contract FukuInit {
         // These arguments are used to execute an arbitrary function using delegatecall
         // in order to set state variables in the diamond during deployment or an upgrade
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface
-        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
-        pts.punkToken = cryptoPunks;
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
+        tas.punkToken = cryptoPunks;
+        tas.fukuToken = airdropInitParams.token;
 
         AirdropClaimStorage storage acs = LibStorage.airdropClaimStorage();
         acs.merkleRoot = airdropInitParams.merkleRoot;
-        acs.token = airdropInitParams.token;
         acs.totalAmount = airdropInitParams.totalAmount;
         acs.initialUnlockBps = airdropInitParams.initialUnlockBps;
 

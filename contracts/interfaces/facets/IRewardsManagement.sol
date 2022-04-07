@@ -16,7 +16,11 @@ interface IRewardsManagement {
 
     function setEpochDuration(uint256 duration) external;
 
-    function setCollectionAllocation(address nftCollection, uint256 allocationAmount) external;
+    function setCollectionAllocation(
+        address nftCollection,
+        uint256 allocationAmount,
+        uint256 floorPrice
+    ) external;
 
     function setDepositsAllocation(uint256 allocationAmount) external;
 
