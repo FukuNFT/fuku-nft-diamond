@@ -52,6 +52,7 @@ struct DepositsRewardsStorage {
 }
 
 struct SalesRewardsStorage {
+    mapping(uint256 => uint256) totalSales;
     mapping(uint256 => mapping(address => uint256)) sales;
 }
 

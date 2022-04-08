@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { LibStorage, BidRewardsStorage, RewardsManagementStorage } from "./LibStorage.sol";
+import { LibStorage, BidRewardsStorage, RewardsManagementStorage, SalesRewardsStorage } from "./LibStorage.sol";
 
-library LibCompetitiveBidUtils {
+library LibRewardsUtils {
+    function getCurrentEpoch() internal view returns (uint256 currentEpoch) {
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+
+        // get the current epoch
+        currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+    }
+
     function checkForCompetitiveBidIncrement(
         address user,
         address collection,
@@ -13,7 +20,7 @@ library LibCompetitiveBidUtils {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
         // get the current epoch
-        uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+        uint256 currentEpoch = getCurrentEpoch();
 
         // check if collection was selected for rewards (floor price of collection set)
         // and if bid amount qualifies as competitive bid
@@ -34,7 +41,7 @@ library LibCompetitiveBidUtils {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
         // get the current epoch
-        uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+        uint256 currentEpoch = getCurrentEpoch();
 
         // check if collection was selected for rewards (floor price of collection set)
         // and if bid amount qualifies as competitive bid
@@ -46,6 +53,21 @@ library LibCompetitiveBidUtils {
                 brs.competitiveBids[currentEpoch][collection][user]--;
                 brs.totalCollectionBids[currentEpoch][collection]--;
             }
+        }
+    }
+
+    function checkForSaleReward(address user, address collection) internal {
+        SalesRewardsStorage storage srs = LibStorage.salesRewardsStorage();
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+
+        // get the current epoch
+        uint256 currentEpoch = getCurrentEpoch();
+
+        // check if collection was selected for rewards (floor price of collection set)
+        uint256 floorPrice = rms.floorPrices[currentEpoch][collection];
+        if (floorPrice > 0) {
+            srs.sales[currentEpoch][user]++;
+            srs.totalSales[currentEpoch]++;
         }
     }
 
@@ -71,5 +93,20 @@ library LibCompetitiveBidUtils {
         }
 
         return userBidRewards;
+    }
+
+    function calculateUserSalesRewards(uint256 epoch, address user) internal view returns (uint256) {
+        SalesRewardsStorage storage srs = LibStorage.salesRewardsStorage();
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+
+        uint256 userSalesRewards;
+        uint256 salesAllocation = rms.salesAllocation[epoch];
+        uint256 totalSales = srs.totalSales[epoch];
+        uint256 userSales = srs.sales[epoch][user];
+        if (userSales > 0) {
+            userSalesRewards = (userSales * salesAllocation) / totalSales;
+        }
+
+        return userSalesRewards;
     }
 }

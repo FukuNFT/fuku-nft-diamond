@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IRewardsManagement } from "../interfaces/facets/IRewardsManagement.sol";
+import { LibRewardsUtils } from "../libraries/LibRewardsUtils.sol";
 import { LibStorage, RewardsManagementStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibDiamond } from "../vendor/libraries/LibDiamond.sol";
 
@@ -25,7 +26,7 @@ contract RewardsManagementFacet is IRewardsManagement {
         // verify the epoch duration has been set
         require(rms.epochDuration > 0, "Epoch duration not set");
         // verify epoch has not already begun
-        uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
+        uint256 currentEpoch = LibRewardsUtils.getCurrentEpoch();
         require(block.timestamp > rms.epochEndings[currentEpoch], "Epoch has not ended");
 
         currentEpoch = rms.nextEpochId++;
