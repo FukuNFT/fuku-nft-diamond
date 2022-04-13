@@ -95,6 +95,12 @@ describe("Rewards Management", async () => {
         "LibDiamond: Must be contract owner"
       );
     });
+
+    it("should fail to set an invalid seller share value", async () => {
+      const invalidSaleShare = 10001;
+
+      await expect(rewardsManagement.setSalesSplit(invalidSaleShare)).to.be.revertedWith("Invalid seller share");
+    });
   });
 
   describe("Starting epoch", async () => {

@@ -118,6 +118,8 @@ contract RewardsManagementFacet is IRewardsManagement {
     function setSalesSplit(uint256 sellerShareBp) external override onlyOwner {
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
+        require(sellerShareBp <= 10000, "Invalid seller share");
+
         rms.sellerShareBp = sellerShareBp;
 
         emit SalesShareSet(sellerShareBp);
