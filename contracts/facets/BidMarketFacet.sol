@@ -187,7 +187,7 @@ contract BidMarketFacet is IBidMarket {
         }
 
         // check if user earns rewards
-        LibRewardsUtils.checkForSaleReward(msg.sender, bidInfo.bidInput.nft);
+        LibRewardsUtils.checkForSaleReward(msg.sender, bidInfo.bidder, bidInfo.bidInput.nft, bidInfo.bidInput.amount);
 
         delete bms.bids[bidId];
         emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInput.amount);

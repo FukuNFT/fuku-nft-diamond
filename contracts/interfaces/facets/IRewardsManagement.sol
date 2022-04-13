@@ -12,6 +12,8 @@ interface IRewardsManagement {
 
     event SalesAllocated(uint256 epochId, uint256 allocationAmount);
 
+    event SalesShareSet(uint256 sellerShareBp);
+
     function startEpoch() external;
 
     function setEpochDuration(uint256 duration) external;
@@ -25,4 +27,6 @@ interface IRewardsManagement {
     function setDepositsAllocation(uint256 allocationAmount) external;
 
     function setSalesAllocation(uint256 allocationAmount) external;
+
+    function setSalesSplit(uint256 sellerShareBp) external;
 }

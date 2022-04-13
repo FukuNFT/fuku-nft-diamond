@@ -19,6 +19,7 @@ describe("Rewards Claim", async () => {
   let collection;
   let collectionAllocation;
   let salesAllocation;
+  let salesSplit;
   let expectedRewards;
 
   let bidAmount;
@@ -37,6 +38,7 @@ describe("Rewards Claim", async () => {
     collection = testERC721.address;
     collectionAllocation = ethers.utils.parseEther("15.0");
     salesAllocation = ethers.utils.parseEther("15.0");
+    salesSplit = 5000; // 50 %
     collectionFloorPrice = ethers.utils.parseEther("1.0");
 
     bidAmount = ethers.utils.parseEther("2.0");
@@ -48,6 +50,8 @@ describe("Rewards Claim", async () => {
     tx = await rewardsManagement.setCollectionAllocation(collection, collectionAllocation, collectionFloorPrice);
     await tx.wait();
     tx = await rewardsManagement.setSalesAllocation(salesAllocation);
+    await tx.wait();
+    tx = await rewardsManagement.setSalesSplit(salesSplit);
     await tx.wait();
     tx = await rewardsManagement.startEpoch();
     await tx.wait();
@@ -147,8 +151,6 @@ describe("Rewards Claim", async () => {
 
   describe("Sales rewards", async () => {
     beforeEach(async () => {
-      expectedRewards = salesAllocation;
-
       // place a bid
       tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, nftId, bidAmount]);
       await tx.wait();
@@ -166,23 +168,34 @@ describe("Rewards Claim", async () => {
     });
 
     it("should successfully emit event when claiming rewards", async () => {
+      expectedRewards = salesAllocation.div(2);
+
       await expect(await rewardsClaim.connect(deployer).claimRewards(currentEpoch))
         .to.emit(rewardsClaim, "RewardsClaim")
         .withArgs(deployer.address, currentEpoch, expectedRewards);
     });
 
     it("should successfully transfer expect reward tokens", async () => {
-      const userBalBefore = await fukuToken.balanceOf(deployer.address);
+      expectedRewards = salesAllocation.div(2);
+
+      const sellerBalBefore = await fukuToken.balanceOf(deployer.address);
+      const buyerBalBefore = await fukuToken.balanceOf(user.address);
 
       tx = await rewardsClaim.connect(deployer).claimRewards(currentEpoch);
       await tx.wait();
+      tx = await rewardsClaim.connect(user).claimRewards(currentEpoch);
+      await tx.wait();
 
-      const userBalAfter = await fukuToken.balanceOf(deployer.address);
+      const sellerBalAfter = await fukuToken.balanceOf(deployer.address);
+      const buyerBalAfter = await fukuToken.balanceOf(user.address);
 
-      expect(userBalAfter.sub(userBalBefore)).to.equal(expectedRewards);
+      expect(sellerBalAfter.sub(sellerBalBefore)).to.equal(expectedRewards);
+      expect(buyerBalAfter.sub(buyerBalBefore).sub(collectionAllocation)).to.equal(expectedRewards);
     });
 
     it("should succesfully distribute rewards to more than one user", async () => {
+      expectedRewards = salesAllocation;
+
       // set up next epoch
       tx = await rewardsManagement.setCollectionAllocation(collection, collectionAllocation, collectionFloorPrice);
       await tx.wait();
@@ -206,12 +219,11 @@ describe("Rewards Claim", async () => {
       await tx.wait();
 
       // have user bid on them
-      const newBidAmount = ethers.utils.parseEther("0.001");
-      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 1, newBidAmount]);
+      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 1, bidAmount]);
       await tx.wait();
-      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 2, newBidAmount]);
+      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 2, bidAmount]);
       await tx.wait();
-      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 3, newBidAmount]);
+      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 3, bidAmount]);
       await tx.wait();
 
       // accept the bids
@@ -225,25 +237,31 @@ describe("Rewards Claim", async () => {
       // advance time past expiry
       await ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
 
-      // get current balances of sellers
+      // get current balances
       const deployerBalBefore = await fukuToken.balanceOf(deployer.address);
       const user2BalBefore = await fukuToken.balanceOf(user2.address);
+      const userBalBefore = await fukuToken.balanceOf(user.address);
 
       // claim rewards
       tx = await rewardsClaim.connect(deployer).claimRewards(1);
       await tx.wait();
       tx = await rewardsClaim.connect(user2).claimRewards(1);
       await tx.wait();
+      tx = await rewardsClaim.connect(user).claimRewards(1);
+      await tx.wait();
 
-      // get current balances of sellers
+      // get current balances
       const deployerBalAfter = await fukuToken.balanceOf(deployer.address);
       const user2BalAfter = await fukuToken.balanceOf(user2.address);
+      const userBalAfter = await fukuToken.balanceOf(user.address);
 
-      const expectedDeployerRewards = ethers.utils.parseEther("5.0");
-      const expectedUser2Rewards = ethers.utils.parseEther("10.0");
+      const expectedDeployerRewards = expectedRewards.div(6);
+      const expectedUser2Rewards = expectedRewards.div(6).mul(2);
+      const expectUserRewards = expectedRewards.div(6).mul(3);
 
       expect(deployerBalAfter.sub(deployerBalBefore)).to.equal(expectedDeployerRewards);
       expect(user2BalAfter.sub(user2BalBefore)).to.equal(expectedUser2Rewards);
+      expect(userBalAfter.sub(userBalBefore).sub(collectionAllocation)).to.equal(expectUserRewards);
     });
   });
 });

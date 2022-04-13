@@ -34,6 +34,7 @@ struct AirdropClaimStorage {
 struct RewardsManagementStorage {
     uint256 nextEpochId;
     uint256 epochDuration;
+    uint256 sellerShareBp;
     mapping(uint256 => uint256) epochEndings;
     mapping(uint256 => uint256) depositsAllocation;
     mapping(uint256 => uint256) salesAllocation;
