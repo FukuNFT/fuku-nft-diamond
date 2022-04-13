@@ -206,12 +206,11 @@ describe("Rewards Claim", async () => {
       await tx.wait();
 
       // have user bid on them
-      const newBidAmount = ethers.utils.parseEther("0.001");
-      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 1, newBidAmount]);
+      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 1, bidAmount]);
       await tx.wait();
-      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 2, newBidAmount]);
+      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 2, bidAmount]);
       await tx.wait();
-      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 3, newBidAmount]);
+      tx = await bidMarket.connect(user).placeBid([vaultNames.empty, collection, 3, bidAmount]);
       await tx.wait();
 
       // accept the bids

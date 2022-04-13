@@ -56,7 +56,11 @@ library LibRewardsUtils {
         }
     }
 
-    function checkForSaleReward(address user, address collection) internal {
+    function checkForSaleReward(
+        address user,
+        address collection,
+        uint256 amount
+    ) internal {
         SalesRewardsStorage storage srs = LibStorage.salesRewardsStorage();
         RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
 
@@ -66,8 +70,8 @@ library LibRewardsUtils {
         // check if collection was selected for rewards (floor price of collection set)
         uint256 floorPrice = rms.floorPrices[currentEpoch][collection];
         if (floorPrice > 0) {
-            srs.sales[currentEpoch][user]++;
-            srs.totalSales[currentEpoch]++;
+            srs.sales[currentEpoch][user] += amount;
+            srs.totalSales[currentEpoch] += amount;
         }
     }
 
