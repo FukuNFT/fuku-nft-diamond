@@ -57,7 +57,8 @@ library LibRewardsUtils {
     }
 
     function checkForSaleReward(
-        address user,
+        address seller,
+        address buyer,
         address collection,
         uint256 amount
     ) internal {
@@ -70,7 +71,12 @@ library LibRewardsUtils {
         // check if collection was selected for rewards (floor price of collection set)
         uint256 floorPrice = rms.floorPrices[currentEpoch][collection];
         if (floorPrice > 0) {
-            srs.sales[currentEpoch][user] += amount;
+            // calculate the share of the seller
+            uint256 sellerAmount = (amount * rms.sellerShareBp) / 10000;
+            uint256 buyerAmount = amount - sellerAmount;
+
+            srs.sales[currentEpoch][seller] += sellerAmount;
+            srs.sales[currentEpoch][buyer] += buyerAmount;
             srs.totalSales[currentEpoch] += amount;
         }
     }

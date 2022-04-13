@@ -107,4 +107,19 @@ contract RewardsManagementFacet is IRewardsManagement {
 
         emit SalesAllocated(rms.nextEpochId, allocationAmount);
     }
+
+    /**
+     * @notice Admin function to set the sales reward split between buyer and seller
+     * @dev Must be less than or equal to 10,000
+     * @dev The buyer share is equal to 10,000 - sellerShareBp
+     *
+     * @param sellerShareBp The share of the seller represented in basis points (i.e. 5000 is 50%)
+     */
+    function setSalesSplit(uint256 sellerShareBp) external override onlyOwner {
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+
+        rms.sellerShareBp = sellerShareBp;
+
+        emit SalesShareSet(sellerShareBp);
+    }
 }

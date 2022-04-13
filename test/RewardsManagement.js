@@ -16,6 +16,7 @@ describe("Rewards Management", async () => {
   let collectionAllocation;
   let depositsAllocation;
   let salesAllocation;
+  let salesSplit;
 
   beforeEach(async () => {
     // initializing fixture values
@@ -29,6 +30,7 @@ describe("Rewards Management", async () => {
     collectionFloorPrice = ethers.utils.parseEther("1.0");
     depositsAllocation = ethers.utils.parseEther("10.0");
     salesAllocation = ethers.utils.parseEther("5.0");
+    salesSplit = 5000;
   });
 
   describe("Setting epoch parameters", async () => {
@@ -52,6 +54,12 @@ describe("Rewards Management", async () => {
         .withArgs(0, salesAllocation);
     });
 
+    it("should emit an event wehn allocating the sales split", async () => {
+      await expect(await rewardsManagement.setSalesSplit(salesSplit))
+        .to.emit(rewardsManagement, "SalesShareSet")
+        .withArgs(salesSplit);
+    });
+
     it("should emit an event when setting the epoch duration", async () => {
       await expect(await rewardsManagement.setEpochDuration(epochDuration))
         .to.emit(rewardsManagement, "EpochDurationSet")
@@ -72,6 +80,12 @@ describe("Rewards Management", async () => {
 
     it("should fail to set sales rewards when not diamond owner", async () => {
       await expect(rewardsManagement.connect(user).setSalesAllocation(salesAllocation)).to.be.revertedWith(
+        "LibDiamond: Must be contract owner"
+      );
+    });
+
+    it("should fail to set sales split when not diamond owner", async () => {
+      await expect(rewardsManagement.connect(user).setSalesSplit(salesSplit)).to.be.revertedWith(
         "LibDiamond: Must be contract owner"
       );
     });
