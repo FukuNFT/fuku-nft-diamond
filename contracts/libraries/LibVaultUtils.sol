@@ -23,6 +23,11 @@ library LibVaultUtils {
         VaultStorage storage vs = LibStorage.vaultStorage();
 
         address vault = vs.vaultAddresses[vaultName];
-        return IERC20(IVault(vault).getLpToken()).balanceOf(vault);
+        address vaultLpToken = IVault(vault).getLpToken();
+        if (vaultLpToken == address(0)) {
+            return vault.balance;
+        } else {
+            return IERC20(vaultLpToken).balanceOf(vault);
+        }
     }
 }

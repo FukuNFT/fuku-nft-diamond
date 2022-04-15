@@ -36,7 +36,7 @@ struct RewardsManagementStorage {
     uint256 epochDuration;
     uint256 sellerShareBp;
     mapping(uint256 => uint256) epochEndings;
-    mapping(uint256 => uint256) depositsAllocation;
+    mapping(uint256 => uint256) depositsAllocation; // todo: remove?
     mapping(uint256 => uint256) salesAllocation;
     mapping(uint256 => mapping(address => uint256)) collectionAllocation;
     mapping(uint256 => mapping(address => uint256)) floorPrices;
@@ -52,7 +52,7 @@ struct DepositsRewardsStorage {
     mapping(bytes12 => uint256) periodFinish;
     mapping(bytes12 => uint256) rewardRate;
     mapping(bytes12 => uint256) rewardsDuration;
-    mapping(bytes12 => uint256) lastUpdatetime;
+    mapping(bytes12 => uint256) lastUpdateTime;
     mapping(bytes12 => uint256) rewardPerTokenStored;
     mapping(bytes12 => uint256) totalSupply;
     mapping(bytes12 => mapping(address => uint256)) userRewardPerTokenPaid;
