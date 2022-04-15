@@ -3,10 +3,24 @@ pragma solidity ^0.8.0;
 
 import { IVaultAccounting } from "../interfaces/facets/IVaultAccounting.sol";
 import { IVault } from "../interfaces/IVault.sol";
-import { LibStorage, VaultStorage } from "../libraries/LibStorage.sol";
+import { LibStorage, VaultStorage, DepositsRewardsStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 
 contract VaultAccountingFacet is IVaultAccounting {
+    modifier updateReward(bytes12 vaultName, address account) {
+        DepositsRewardsStorage storage drs = LibStorage.depositsRewardsStorage();
+
+        drs.rewardPerTokenStored[vaultName] = rewardPerToken(vaultName);
+        drs.lastUpdatetime[vaultName] = lastTimeRewardApplicable(vaultName);
+
+        if (account != address(0)) {
+            drs.rewards[vaultName][account] = earned(vaultName, account);
+            drs.userRewardPerTokenPaid[vaultName][account];
+        }
+
+        _;
+    }
+
     /**
      * @notice Deposits ETH into vault
      * @dev Main point of entry into the marketplace
@@ -93,6 +107,21 @@ contract VaultAccountingFacet is IVaultAccounting {
     }
 
     /**
+     * @notice Claim the rewards owed for a vault
+     *
+     * @param vaultName The vault name
+     */
+    function getReward(bytes12 vaultName) external override {}
+
+    /**
+     * @notice Notify the reward amount
+     *
+     * @param vaultName The vault name
+     * @param reward The reward amount
+     */
+    function notifyRewardAmount(bytes12 vaultName, uint256 reward) external override {}
+
+    /**
      * @notice Queries the user's lp token balance for a vault
      *
      * @param user The user to query for
@@ -111,4 +140,26 @@ contract VaultAccountingFacet is IVaultAccounting {
     function userETHBalance(address user, bytes12 vaultName) external view override returns (uint256) {
         return LibVaultUtils.getUserEthBalance(user, vaultName);
     }
+
+    /**
+     * @notice Queries the user's earned rewards for a vault
+     *
+     * @param vaultName The vault name
+     * @param account The user's address
+     */
+    function earned(bytes12 vaultName, address account) public view override returns (uint256) {}
+
+    /**
+     * @notice Calculates the reward per token
+     *
+     * @param vaultName The vault name
+     */
+    function rewardPerToken(bytes12 vaultName) public view override returns (uint256) {}
+
+    /**
+     * @notice Calculates the last time reward applicable
+     *
+     * @param vaultName The vault name
+     */
+    function lastTimeRewardApplicable(bytes12 vaultName) public view override returns (uint256) {}
 }

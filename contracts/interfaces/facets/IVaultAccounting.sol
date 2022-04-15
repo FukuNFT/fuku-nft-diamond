@@ -18,7 +18,17 @@ interface IVaultAccounting {
 
     function withdrawLpToken(uint256 lpTokenAmount, bytes12 vault) external;
 
+    function getReward(bytes12 vaultName) external;
+
+    function notifyRewardAmount(bytes12 vaultName, uint256 reward) external;
+
     function userLPTokenBalance(address user, bytes12 vaultName) external view returns (uint256);
 
     function userETHBalance(address user, bytes12 vaultName) external view returns (uint256);
+
+    function earned(bytes12 vaultName, address account) external view returns (uint256);
+
+    function rewardPerToken(bytes12 vaultName) external view returns (uint256);
+
+    function lastTimeRewardApplicable(bytes12 vaultName) external view returns (uint256);
 }
