@@ -49,7 +49,14 @@ struct BidRewardsStorage {
 }
 
 struct DepositsRewardsStorage {
-    mapping(uint256 => mapping(address => uint256)) deposits;
+    mapping(bytes12 => uint256) periodFinish;
+    mapping(bytes12 => uint256) rewardRate;
+    mapping(bytes12 => uint256) rewardsDuration;
+    mapping(bytes12 => uint256) lastUpdatetime;
+    mapping(bytes12 => uint256) rewardPerTokenStored;
+    mapping(bytes12 => uint256) totalSupply;
+    mapping(bytes12 => mapping(address => uint256)) userRewardPerTokenPaid;
+    mapping(bytes12 => mapping(address => uint256)) rewards;
 }
 
 struct SalesRewardsStorage {
