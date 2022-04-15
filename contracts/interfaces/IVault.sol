@@ -53,4 +53,9 @@ interface IVault {
      * @param ethAmount The ETH amount
      */
     function getAmountLpTokens(uint256 ethAmount) external view returns (uint256);
+
+    /**
+     * @dev Get the LP token address of the vault
+     */
+    function getLpToken() external view returns (address);
 }

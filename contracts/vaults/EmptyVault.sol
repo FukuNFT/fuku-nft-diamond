@@ -43,4 +43,8 @@ contract EmptyVault is BaseVault {
     function getAmountLpTokens(uint256 ethAmount) external pure override returns (uint256) {
         return ethAmount;
     }
+
+    function getLpToken() external pure override returns (address) {
+        return address(0); // ETH is the lp token, no address
+    }
 }
