@@ -34,3 +34,10 @@ struct AcceptedOption {
     uint256 expiry;
     address seller;
 }
+
+struct AirdropInit {
+    bytes32 merkleRoot;
+    address token;
+    uint256 totalAmount;
+    uint256 initialUnlockBps;
+}

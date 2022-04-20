@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IOptionMarket } from "../interfaces/facets/IOptionMarket.sol";
 import { ICryptoPunksMarket } from "../interfaces/ICryptoPunksMarket.sol";
 import { IVault } from "../interfaces/IVault.sol";
-import { LibStorage, OptionMarketStorage, VaultStorage, PunkTokenStorage } from "../libraries/LibStorage.sol";
+import { LibStorage, OptionMarketStorage, VaultStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 import { OptionDuration, OptionInputParams, OptionInfo } from "../FukuTypes.sol";
 
@@ -19,7 +19,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
      */
     function placeOptionBid(OptionInputParams calldata optionParams) external override {
         OptionMarketStorage storage oms = LibStorage.optionMarketStorage();
-        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         // ensure strike and premium are not 0
         require(
@@ -27,13 +27,13 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
             "Insufficient strike and premium amounts"
         );
 
-        if (optionParams.bidInput.nft == pts.punkToken) {
+        if (optionParams.bidInput.nft == tas.punkToken) {
             // check punk exists
             require(optionParams.bidInput.nftIndex < 10000, "Punk not found");
 
             // check is not already owned by fuku marketplace
             require(
-                ICryptoPunksMarket(pts.punkToken).punkIndexToAddress(optionParams.bidInput.nftIndex) != address(this),
+                ICryptoPunksMarket(tas.punkToken).punkIndexToAddress(optionParams.bidInput.nftIndex) != address(this),
                 "Already in option"
             );
         } else {
@@ -129,7 +129,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
     function acceptOptionBid(uint256 optionId) external override {
         OptionMarketStorage storage oms = LibStorage.optionMarketStorage();
         VaultStorage storage vs = LibStorage.vaultStorage();
-        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         OptionInfo memory option = oms.options[optionId];
         IVault vault = IVault(vs.vaultAddresses[option.optionInput.bidInput.vault]);
@@ -161,15 +161,15 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         require(option.optionInput.premium <= ethReturned, "Didn't burn enough LP tokens");
 
         // check if punk option bid
-        if (option.optionInput.bidInput.nft == pts.punkToken) {
+        if (option.optionInput.bidInput.nft == tas.punkToken) {
             require(
-                ICryptoPunksMarket(pts.punkToken).punkIndexToAddress(option.optionInput.bidInput.nftIndex) ==
+                ICryptoPunksMarket(tas.punkToken).punkIndexToAddress(option.optionInput.bidInput.nftIndex) ==
                     msg.sender,
                 "Not your punk"
             );
 
             // buy the punk for the premium (punk now held in escrow)
-            ICryptoPunksMarket(pts.punkToken).buyPunk{ value: option.optionInput.premium }(
+            ICryptoPunksMarket(tas.punkToken).buyPunk{ value: option.optionInput.premium }(
                 option.optionInput.bidInput.nftIndex
             );
         } else {
@@ -313,11 +313,11 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         address from,
         address to
     ) internal {
-        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         // check if sending punk
-        if (nft == pts.punkToken) {
-            ICryptoPunksMarket(pts.punkToken).transferPunk(to, nftIndex);
+        if (nft == tas.punkToken) {
+            ICryptoPunksMarket(tas.punkToken).transferPunk(to, nftIndex);
         } else {
             IERC721(nft).safeTransferFrom(from, to, nftIndex);
         }

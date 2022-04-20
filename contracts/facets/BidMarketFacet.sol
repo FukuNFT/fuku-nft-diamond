@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IBidMarket } from "../interfaces/facets/IBidMarket.sol";
 import { ICryptoPunksMarket } from "../interfaces/ICryptoPunksMarket.sol";
 import { IVault } from "../interfaces/IVault.sol";
-import { LibStorage, BidMarketStorage, VaultStorage, PunkTokenStorage } from "../libraries/LibStorage.sol";
+import { LibStorage, BidMarketStorage, VaultStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 import { BidInputParams, BidInfo } from "../FukuTypes.sol";
 
@@ -18,11 +18,11 @@ contract BidMarketFacet is IBidMarket {
      */
     function placeBid(BidInputParams calldata bidInputParams) public override {
         BidMarketStorage storage bms = LibStorage.bidMarketStorage();
-        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         require(bidInputParams.amount > 0, "Insufficient bid amount");
 
-        if (bidInputParams.nft == pts.punkToken) {
+        if (bidInputParams.nft == tas.punkToken) {
             // check punk exists
             require(bidInputParams.nftIndex < 10000, "Punk not found");
         } else {
@@ -131,7 +131,7 @@ contract BidMarketFacet is IBidMarket {
     function acceptBid(uint256 bidId) external override {
         BidMarketStorage storage bms = LibStorage.bidMarketStorage();
         VaultStorage storage vs = LibStorage.vaultStorage();
-        PunkTokenStorage storage pts = LibStorage.punkTokenStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
         BidInfo memory bidInfo = bms.bids[bidId];
         IVault vault = IVault(vs.vaultAddresses[bidInfo.bidInput.vault]);
@@ -157,14 +157,14 @@ contract BidMarketFacet is IBidMarket {
         require(bidInfo.bidInput.amount <= ethReturned, "Didn't burn enough LP tokens");
 
         // check if punk bid
-        if (bidInfo.bidInput.nft == pts.punkToken) {
+        if (bidInfo.bidInput.nft == tas.punkToken) {
             require(
-                ICryptoPunksMarket(pts.punkToken).punkIndexToAddress(bidInfo.bidInput.nftIndex) == msg.sender,
+                ICryptoPunksMarket(tas.punkToken).punkIndexToAddress(bidInfo.bidInput.nftIndex) == msg.sender,
                 "Not your punk"
             );
 
-            ICryptoPunksMarket(pts.punkToken).buyPunk{ value: bidInfo.bidInput.amount }(bidInfo.bidInput.nftIndex);
-            ICryptoPunksMarket(pts.punkToken).transferPunk(bidInfo.bidder, bidInfo.bidInput.nftIndex);
+            ICryptoPunksMarket(tas.punkToken).buyPunk{ value: bidInfo.bidInput.amount }(bidInfo.bidInput.nftIndex);
+            ICryptoPunksMarket(tas.punkToken).transferPunk(bidInfo.bidder, bidInfo.bidInput.nftIndex);
         } else {
             require(IERC721(bidInfo.bidInput.nft).ownerOf(bidInfo.bidInput.nftIndex) == msg.sender, "Not your NFT");
 

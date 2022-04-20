@@ -1,5 +1,7 @@
 const { ethers, deployments } = require("hardhat");
 const { getSelectors, FacetCutAction } = require("../scripts/libraries/diamond.js");
+const { MerkleTree } = require("merkletreejs");
+const keccak256 = require("keccak256");
 
 const fixture = deployments.createFixture(async () => {
   // get signers
@@ -29,6 +31,9 @@ const fixture = deployments.createFixture(async () => {
     "OptionMarketFacet",
     "VaultAccountingFacet",
     "VaultManagementFacet",
+    "AirdropClaimFacet",
+    "RewardsClaimFacet",
+    "RewardsManagementFacet",
   ];
   const cut = [];
   for (const FacetName of FacetNames) {
@@ -52,8 +57,34 @@ const fixture = deployments.createFixture(async () => {
   const cryptoPunks = await CryptoPunks.deploy();
   await cryptoPunks.deployed();
 
+  // create a test Fuku token
+  const FukuToken = await ethers.getContractFactory("TestFukuToken");
+  const fukuToken = await FukuToken.deploy("Fuku", "FUKU");
+  await fukuToken.deployed();
+
+  // create merkle tree for airdrop
+  const buf2hex = (x) => "0x" + x.toString("hex");
+  const whitelistAddressesAndAmounts = [
+    [deployer.address, ethers.utils.parseEther("2.0")],
+    [user.address, ethers.utils.parseEther("3.0")],
+  ];
+  const leafNodes = whitelistAddressesAndAmounts.map((entry) =>
+    ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
+  );
+  const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+  const rootHash = merkleTree.getRoot();
+  const deployerProof = merkleTree.getProof(leafNodes[0]).map((x) => buf2hex(x.data));
+  const userProof = merkleTree.getProof(leafNodes[1]).map((x) => buf2hex(x.data));
+  const totalAirdropAmount = ethers.utils.parseEther("1000");
+  const initialUnlockBps = 3000;
+  tx = await fukuToken.approve(diamond.address, ethers.utils.parseEther("10000"));
+  await tx.wait();
+
   // call to diamond cut
-  const calldata = fukuInit.interface.encodeFunctionData("init", [cryptoPunks.address]);
+  const calldata = fukuInit.interface.encodeFunctionData("init", [
+    cryptoPunks.address,
+    [rootHash, fukuToken.address, totalAirdropAmount, initialUnlockBps],
+  ]);
   const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
   tx = await diamondCut.diamondCut(cut, fukuInit.address, calldata);
   await tx.wait();
@@ -63,6 +94,9 @@ const fixture = deployments.createFixture(async () => {
   const optionMarket = await ethers.getContractAt("IOptionMarket", diamond.address);
   const vaultAccounting = await ethers.getContractAt("IVaultAccounting", diamond.address);
   const vaultManagement = await ethers.getContractAt("IVaultManagement", diamond.address);
+  const airdropClaim = await ethers.getContractAt("IAirdropClaim", diamond.address);
+  const rewardsClaim = await ethers.getContractAt("IRewardsClaim", diamond.address);
+  const rewardsManagement = await ethers.getContractAt("IRewardsManagement", diamond.address);
 
   // create vault names
   const vaultNames = {
@@ -83,9 +117,17 @@ const fixture = deployments.createFixture(async () => {
     optionMarket,
     vaultAccounting,
     vaultManagement,
+    airdropClaim,
+    rewardsClaim,
+    rewardsManagement,
     vaultNames,
     testERC721,
     cryptoPunks,
+    fukuToken,
+    whitelistAddressesAndAmounts,
+    rootHash,
+    deployerProof,
+    userProof,
   };
 });
 
