@@ -33,7 +33,7 @@ contract VaultAccountingFacet is IVaultAccounting {
 
         if (account != address(0)) {
             drs.rewards[vaultName][account] = earned(vaultName, account);
-            drs.userRewardPerTokenPaid[vaultName][account];
+            drs.userRewardPerTokenPaid[vaultName][account] = drs.rewardPerTokenStored[vaultName];
         }
 
         _;
@@ -157,6 +157,10 @@ contract VaultAccountingFacet is IVaultAccounting {
         DepositsRewardsStorage storage drs = LibStorage.depositsRewardsStorage();
         TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
 
+        // transfer in reward amount
+        // todo: state variable to keep track of how much is allocated?
+        IERC20(tas.fukuToken).transferFrom(msg.sender, address(this), reward);
+
         if (block.timestamp >= drs.periodFinish[vaultName]) {
             drs.rewardRate[vaultName] = reward / drs.rewardsDuration[vaultName];
         } else {
@@ -164,13 +168,6 @@ contract VaultAccountingFacet is IVaultAccounting {
             uint256 leftover = remaining * drs.rewardRate[vaultName];
             drs.rewardRate[vaultName] = reward + leftover / drs.rewardsDuration[vaultName];
         }
-
-        // Ensure the provided reward amount is not more than the balance in the contract.
-        // This keeps the reward rate in the right range, preventing overflows due to
-        // very high values of rewardRate in the earned and rewardsPerToken functions;
-        // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint256 balance = IERC20(tas.fukuToken).balanceOf(address(this));
-        require(drs.rewardRate[vaultName] <= balance / drs.rewardsDuration[vaultName], "Provided reward too high");
 
         drs.lastUpdateTime[vaultName] = block.timestamp;
         drs.periodFinish[vaultName] = block.timestamp + drs.rewardsDuration[vaultName];
@@ -246,9 +243,10 @@ contract VaultAccountingFacet is IVaultAccounting {
 
         return
             drs.rewardPerTokenStored[vaultName] +
-            (lastTimeRewardApplicable(vaultName) -
-                (drs.lastUpdateTime[vaultName] * drs.rewardRate[vaultName] * 1e18) /
-                totalSupply);
+            (
+                ((((lastTimeRewardApplicable(vaultName) - drs.lastUpdateTime[vaultName]) * drs.rewardRate[vaultName]) *
+                    1e18) / totalSupply)
+            );
     }
 
     /**
