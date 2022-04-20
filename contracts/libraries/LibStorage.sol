@@ -34,18 +34,7 @@ struct AirdropClaimStorage {
 struct RewardsManagementStorage {
     uint256 nextEpochId;
     uint256 epochDuration;
-    uint256 sellerShareBp;
     mapping(uint256 => uint256) epochEndings;
-    mapping(uint256 => uint256) depositsAllocation; // todo: remove?
-    mapping(uint256 => uint256) salesAllocation;
-    mapping(uint256 => mapping(address => uint256)) collectionAllocation;
-    mapping(uint256 => mapping(address => uint256)) floorPrices;
-    mapping(uint256 => address[]) rewardedCollections;
-}
-
-struct BidRewardsStorage {
-    mapping(uint256 => mapping(address => uint256)) totalCollectionBids;
-    mapping(uint256 => mapping(address => mapping(address => uint256))) competitiveBids;
 }
 
 struct DepositsRewardsStorage {
@@ -59,11 +48,6 @@ struct DepositsRewardsStorage {
     mapping(bytes12 => mapping(address => uint256)) rewards;
 }
 
-struct SalesRewardsStorage {
-    mapping(uint256 => uint256) totalSales;
-    mapping(uint256 => mapping(address => uint256)) sales;
-}
-
 library LibStorage {
     bytes32 constant BID_MARKET_STORAGE_POSITION = keccak256("fuku.storage.market.bid");
     bytes32 constant OPTION_MARKET_STORAGE_POSTION = keccak256("fuku.storage.market.option");
@@ -71,9 +55,7 @@ library LibStorage {
     bytes32 constant TOKEN_ADDRESS_STORAGE_POSITION = keccak256("fuku.storage.token.address");
     bytes32 constant AIRDROP_CLAIM_STORAGE_POSITION = keccak256("fuku.storage.airdrop.claim");
     bytes32 constant REWARDS_MANAGEMENT_STORAGE_POSITION = keccak256("fuku.storage.rewards.management");
-    bytes32 constant BIDS_REWARDS_STORAGE_POSITION = keccak256("fuku.storage.bids.rewards");
     bytes32 constant DEPOSITS_REWARDS_STORAGE_POSITION = keccak256("fuku.storage.deposits.rewards");
-    bytes32 constant SALES_REWARDS_STORAGE_POSITION = keccak256("fuku.storage.sales.rewards");
 
     function bidMarketStorage() internal pure returns (BidMarketStorage storage bms) {
         bytes32 position = BID_MARKET_STORAGE_POSITION;
@@ -117,24 +99,10 @@ library LibStorage {
         }
     }
 
-    function bidRewardsStorage() internal pure returns (BidRewardsStorage storage brs) {
-        bytes32 position = BIDS_REWARDS_STORAGE_POSITION;
-        assembly {
-            brs.slot := position
-        }
-    }
-
     function depositsRewardsStorage() internal pure returns (DepositsRewardsStorage storage drs) {
         bytes32 position = DEPOSITS_REWARDS_STORAGE_POSITION;
         assembly {
             drs.slot := position
-        }
-    }
-
-    function salesRewardsStorage() internal pure returns (SalesRewardsStorage storage srs) {
-        bytes32 position = SALES_REWARDS_STORAGE_POSITION;
-        assembly {
-            srs.slot := position
         }
     }
 }
