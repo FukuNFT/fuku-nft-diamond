@@ -6,7 +6,6 @@ import { ICryptoPunksMarket } from "../interfaces/ICryptoPunksMarket.sol";
 import { IVault } from "../interfaces/IVault.sol";
 import { LibStorage, BidMarketStorage, VaultStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
-import { LibRewardsUtils } from "../libraries/LibRewardsUtils.sol";
 import { BidInputParams, BidInfo } from "../FukuTypes.sol";
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -38,9 +37,6 @@ contract BidMarketFacet is IBidMarket {
         // create the bid
         uint256 bidId = bms.nextBidId++;
         bms.bids[bidId] = BidInfo(bidInputParams, msg.sender);
-
-        // check if competitive bid or not
-        LibRewardsUtils.checkForCompetitiveBidIncrement(msg.sender, bidInputParams.nft, bidInputParams.amount);
 
         emit BidEntered(
             bidId,
@@ -83,8 +79,6 @@ contract BidMarketFacet is IBidMarket {
 
         bms.bids[bidId].bidInput.amount = newAmount;
 
-        // todo: check for competitive bid definition
-
         emit BidModified(bidId, newAmount);
     }
 
@@ -111,13 +105,6 @@ contract BidMarketFacet is IBidMarket {
 
         // only bidder can withdraw his bid
         require(bms.bids[bidId].bidder == msg.sender, "Not your bid");
-
-        // check if the withdrawn bid was competitive
-        LibRewardsUtils.checkForCompetitiveBidDecrement(
-            msg.sender,
-            bms.bids[bidId].bidInput.nft,
-            bms.bids[bidId].bidInput.amount
-        );
 
         // set bid values back to default
         delete bms.bids[bidId];
@@ -185,9 +172,6 @@ contract BidMarketFacet is IBidMarket {
 
             IERC721(bidInfo.bidInput.nft).safeTransferFrom(msg.sender, bidInfo.bidder, bidInfo.bidInput.nftIndex);
         }
-
-        // check if user earns rewards
-        LibRewardsUtils.checkForSaleReward(msg.sender, bidInfo.bidder, bidInfo.bidInput.nft, bidInfo.bidInput.amount);
 
         delete bms.bids[bidId];
         emit BidAccepted(bidId, bidInfo.bidder, msg.sender, bidInfo.bidInput.amount);

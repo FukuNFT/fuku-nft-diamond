@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import { IRewardsClaim } from "../interfaces/facets/IRewardsClaim.sol";
-import { LibRewardsUtils } from "../libraries/LibRewardsUtils.sol";
 import { LibStorage, TokenAddressStorage, RewardsManagementStorage } from "../libraries/LibStorage.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -19,11 +18,8 @@ contract RewardsClaimFacet is IRewardsClaim {
         require(rms.epochEndings[epoch] > 0, "Epoch not started");
         require(block.timestamp > rms.epochEndings[epoch], "Epoch not ended");
 
-        // calculate
+        // todo: calculate
         uint256 userRewards;
-        userRewards += LibRewardsUtils.calculateUserBidRewards(epoch, msg.sender);
-        userRewards += LibRewardsUtils.calculateUserSalesRewards(epoch, msg.sender);
-        // todo: other rewards
         require(userRewards > 0, "User has no rewards");
 
         // transfer the rewards tokens
