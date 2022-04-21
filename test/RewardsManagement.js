@@ -1,5 +1,7 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
+const { MerkleTree } = require("merkletreejs");
+const keccak256 = require("keccak256");
 
 const { fixture } = require("./fixture");
 
@@ -10,6 +12,10 @@ describe("Rewards Management", async () => {
 
   // rewards management parameters
   let epochDuration;
+  let epochRewards;
+  let rewardAddressAndAmount;
+  let rootHash;
+  let userProof;
 
   beforeEach(async () => {
     // initializing fixture values
@@ -76,6 +82,67 @@ describe("Rewards Management", async () => {
 
     it("should fail to start an epoch if duration has not been set", async () => {
       await expect(rewardsManagement.startEpoch()).to.be.revertedWith("Epoch duration not set");
+    });
+
+    it("should fail to start an epoch if not the diamond owner", async () => {
+      await expect(rewardsManagement.connect(user).startEpoch()).to.be.revertedWith(
+        "LibDiamond: Must be contract owner"
+      );
+    });
+  });
+
+  describe("Setting rewards distribution", async () => {
+    beforeEach(async () => {
+      epochRewards = ethers.utils.parseEther("10.0");
+
+      // need to set the duration before starting
+      tx = await rewardsManagement.setEpochDuration(epochDuration);
+      await tx.wait();
+
+      // start the epoch
+      tx = await rewardsManagement.startEpoch();
+      await tx.wait();
+
+      // advance until end of epoch
+      await ethers.provider.send("evm_increaseTime", [epochDuration]);
+      await ethers.provider.send("evm_mine");
+
+      // create merkle tree for airdrop
+      const buf2hex = (x) => "0x" + x.toString("hex");
+      rewardAddressAndAmount = [[user.address, ethers.utils.parseEther("5.0")]];
+      const leafNodes = rewardAddressAndAmount.map((entry) =>
+        ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
+      );
+      const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
+      rootHash = merkleTree.getRoot();
+      userProof = merkleTree.getProof(leafNodes[0]).map((x) => buf2hex(x.data));
+    });
+
+    it("should emit an event after setting the rewards distribution", async () => {
+      await expect(await rewardsManagement.setEpochRewardsDistribution(0, rootHash, epochRewards))
+        .to.emit(rewardsManagement, "EpochRewardsDistributionSet")
+        .withArgs(0, epochRewards);
+    });
+
+    it("should fail to set rewards distribution if not the diamond owner", async () => {
+      await expect(
+        rewardsManagement.connect(user).setEpochRewardsDistribution(0, rootHash, epochRewards)
+      ).to.be.revertedWith("LibDiamond: Must be contract owner");
+    });
+
+    it("should fail to set rewards distribution if the epoch has not ended", async () => {
+      await expect(rewardsManagement.setEpochRewardsDistribution(1, rootHash, epochRewards)).to.be.revertedWith(
+        "Epoch has not ended"
+      );
+    });
+
+    it("should fail to set rewards distribution twice for the same epoch", async () => {
+      tx = await rewardsManagement.setEpochRewardsDistribution(0, rootHash, epochRewards);
+      await tx.wait();
+
+      await expect(rewardsManagement.setEpochRewardsDistribution(0, rootHash, epochRewards)).to.be.revertedWith(
+        "Epoch rewards already set"
+      );
     });
   });
 });
