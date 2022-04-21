@@ -24,7 +24,7 @@ contract RewardsManagementFacet is IRewardsManagement {
 
         // verify the epoch duration has been set
         require(rms.epochDuration > 0, "Epoch duration not set");
-        // verify epoch has not already begun
+        // verify current epoch has ended
         uint256 currentEpoch = rms.nextEpochId == 0 ? 0 : rms.nextEpochId - 1;
         require(block.timestamp > rms.epochEndings[currentEpoch], "Epoch has not ended");
 
@@ -46,5 +46,38 @@ contract RewardsManagementFacet is IRewardsManagement {
         rms.epochDuration = duration;
 
         emit EpochDurationSet(duration);
+    }
+
+    /**
+     * @notice Admin function to set the epoch rewards distribution
+     *
+     * @param epoch The epoch
+     * @param merkleRoot The merkle root for the claim
+     * @param totalRewards The total amount of rewards set for this epoch
+     */
+    function setEpochRewardsDistribution(
+        uint256 epoch,
+        bytes32 merkleRoot,
+        uint256 totalRewards
+    ) external override onlyOwner {
+        RewardsManagementStorage storage rms = LibStorage.rewardsManagementStorage();
+        TokenAddressStorage storage tas = LibStorage.tokenAddressStorage();
+
+        // verify epoch has ended
+        require(rms.epochEndings[epoch] > 0 && block.timestamp > rms.epochEndings[epoch], "Epoch has not ended");
+        // verify rewards have not already been set
+        require(
+            rms.epochRewardsMekleRoots[epoch] == bytes32(0) && rms.epochTotalRewards[epoch] == 0,
+            "Epoch rewards already set"
+        );
+
+        // set the rewards values
+        rms.epochRewardsMekleRoots[epoch] = merkleRoot;
+        rms.epochTotalRewards[epoch] = totalRewards;
+
+        // transfer in reward tokens
+        IERC20(tas.fukuToken).transferFrom(msg.sender, address(this), totalRewards);
+
+        emit EpochRewardsDistributionSet(epoch, totalRewards);
     }
 }
