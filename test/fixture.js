@@ -1,10 +1,9 @@
 const hre = require("hardhat");
-const { deployments } = require("hardhat");
 const { getSelectors, FacetCutAction } = require("../scripts/libraries/diamond.js");
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 
-const fixture = deployments.createFixture(async () => {
+const fixture = hre.ethers.deployments.createFixture(async () => {
   // get signers
   const signers = await hre.ethers.getSigners();
   const [deployer, user] = signers;
