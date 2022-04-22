@@ -3,7 +3,7 @@ const { getSelectors, FacetCutAction } = require("../scripts/libraries/diamond.j
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 
-const fixture = hre.ethers.deployments.createFixture(async () => {
+const fixture = hre.deployments.createFixture(async () => {
   // get signers
   const signers = await hre.ethers.getSigners();
   const [deployer, user] = signers;
