@@ -1,8 +1,5 @@
 const hre = require("hardhat");
-const chai = require("chai");
 const { expect } = require("chai");
-const { solidity } = require("ethereum-waffle");
-chai.use(solidity);
 
 const { fixture } = require("./fixture");
 
