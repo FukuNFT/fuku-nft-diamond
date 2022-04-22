@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
@@ -18,7 +18,7 @@ describe("Airdrop Claim", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ fukuToken, airdropClaim, whitelistAddressesAndAmounts, deployerProof, userProof } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
     airdropClaim = airdropClaim.connect(user);
 
     // initialize aidrop parameters
@@ -42,7 +42,7 @@ describe("Airdrop Claim", async () => {
   });
 
   it("should fail to claim with an invalid airdrop amount", async () => {
-    const invalidAmount = ethers.utils.parseEther("10.0");
+    const invalidAmount = hre.ethers.utils.parseEther("10.0");
 
     await expect(airdropClaim.claimAirdrop(invalidAmount, userProof)).to.be.revertedWith("Invalid merkle proof");
   });

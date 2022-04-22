@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
@@ -21,17 +21,17 @@ describe("Bid Market", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ bidMarket, vaultAccounting, vaultManagement, vaultNames, testERC721, cryptoPunks } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
     bidMarket = bidMarket.connect(user);
 
     // initialize bidding parameters
-    bidAmount = ethers.utils.parseEther("0.5");
+    bidAmount = hre.ethers.utils.parseEther("0.5");
     nftId = 0;
     bidMarketSeller = bidMarket.connect(deployer);
 
     // deposit eth in vault
-    const emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
-    const amount = ethers.utils.parseEther("1.0");
+    const emptyVault = await hre.ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
+    const amount = hre.ethers.utils.parseEther("1.0");
     tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
     await tx.wait();
   });
@@ -50,7 +50,7 @@ describe("Bid Market", async () => {
     });
 
     it("should fail to place a bid of 0 value", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.0");
+      const newBidAmount = hre.ethers.utils.parseEther("0.0");
 
       await expect(bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, nftId, newBidAmount])).to.be.revertedWith(
         "Insufficient bid amount"
@@ -72,7 +72,7 @@ describe("Bid Market", async () => {
     });
 
     it("should fail to place a bid if user does not have enough funds deposited", async () => {
-      const newBidAmount = ethers.utils.parseEther("1.5");
+      const newBidAmount = hre.ethers.utils.parseEther("1.5");
 
       await expect(bidMarket.placeBid([vaultNames.empty, testERC721.address, nftId, newBidAmount])).to.be.revertedWith(
         "Insufficient funds"
@@ -80,7 +80,7 @@ describe("Bid Market", async () => {
     });
 
     it("should successfully place multiple bids", async () => {
-      const bidAmounts = [ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.6")];
+      const bidAmounts = [hre.ethers.utils.parseEther("0.5"), hre.ethers.utils.parseEther("0.6")];
       const nftIds = [0, 1];
 
       await expect(
@@ -99,32 +99,32 @@ describe("Bid Market", async () => {
     });
 
     it("should successfully modify a bid", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.6");
+      const newBidAmount = hre.ethers.utils.parseEther("0.6");
 
       await expect(bidMarket.modifyBid(0, newBidAmount)).to.emit(bidMarket, "BidModified").withArgs(0, newBidAmount);
     });
 
     it("should fail to modified bid of another bidder", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.6");
+      const newBidAmount = hre.ethers.utils.parseEther("0.6");
 
       await expect(bidMarket.connect(deployer).modifyBid(0, newBidAmount)).to.be.revertedWith("Not bid owner");
     });
 
     it("should fail to modify bid with 0 bid amount", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.0");
+      const newBidAmount = hre.ethers.utils.parseEther("0.0");
 
       await expect(bidMarket.modifyBid(0, newBidAmount)).to.be.revertedWith("Insufficient bid amount");
     });
 
     it("should fail to modify bid with insufficient funds", async () => {
-      const newBidAmount = ethers.utils.parseEther("1.5");
+      const newBidAmount = hre.ethers.utils.parseEther("1.5");
 
       await expect(bidMarket.modifyBid(0, newBidAmount)).to.be.revertedWith("Insufficient funds");
     });
 
     it("should successfully place multiple bids", async () => {
       // place 2 bids
-      let bidAmounts = [ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.6")];
+      let bidAmounts = [hre.ethers.utils.parseEther("0.5"), hre.ethers.utils.parseEther("0.6")];
       const nftIds = [0, 1];
 
       await expect(
@@ -135,7 +135,7 @@ describe("Bid Market", async () => {
       ).to.not.be.reverted;
 
       // modify 2 bids
-      bidAmounts = [ethers.utils.parseEther("0.3"), ethers.utils.parseEther("0.4")];
+      bidAmounts = [hre.ethers.utils.parseEther("0.3"), hre.ethers.utils.parseEther("0.4")];
       await expect(bidMarket.modifyMultipleBids([0, 1], bidAmounts)).to.not.be.reverted;
     });
   });
@@ -167,7 +167,7 @@ describe("Bid Market", async () => {
   describe("Accepting bids", async () => {
     beforeEach(async () => {
       // place bid
-      bidAmount = ethers.utils.parseEther("1.0");
+      bidAmount = hre.ethers.utils.parseEther("1.0");
       tx = await bidMarket.placeBid([vaultNames.empty, testERC721.address, 0, bidAmount]);
       await tx.wait();
       tx = await bidMarket.placeBid([vaultNames.empty, cryptoPunks.address, 0, bidAmount]);

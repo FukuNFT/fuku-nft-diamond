@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
@@ -25,12 +25,12 @@ describe("Option Market", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ optionMarket, vaultAccounting, vaultNames, testERC721, cryptoPunks } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
     optionMarket = optionMarket.connect(user);
 
     // initialize bidding parameterss
-    bidAmount = ethers.utils.parseEther("0.5");
-    premium = ethers.utils.parseEther("0.75");
+    bidAmount = hre.ethers.utils.parseEther("0.5");
+    premium = hre.ethers.utils.parseEther("0.75");
     duration = 0; // 0 is 30 days, 1 is 90 days
     bidInput = [vaultNames.empty, testERC721.address, 0, bidAmount];
     punksBidInput = [vaultNames.empty, cryptoPunks.address, 0, bidAmount];
@@ -39,7 +39,7 @@ describe("Option Market", async () => {
     THIRTY_DAYS = 2592000;
 
     // deposit eth in vault
-    const amount = ethers.utils.parseEther("1.0");
+    const amount = hre.ethers.utils.parseEther("1.0");
     tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
     await tx.wait();
   });
@@ -58,7 +58,7 @@ describe("Option Market", async () => {
     });
 
     it("should fail to place option bid if strike amount is 0", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.0");
+      const newBidAmount = hre.ethers.utils.parseEther("0.0");
       const newBidInput = [vaultNames.empty, testERC721.address, 0, newBidAmount];
 
       await expect(optionMarket.placeOptionBid([newBidInput, premium, duration])).to.be.revertedWith(
@@ -67,7 +67,7 @@ describe("Option Market", async () => {
     });
 
     it("should fail to place option bid if premium amount is 0", async () => {
-      const newPremium = ethers.utils.parseEther("0.0");
+      const newPremium = hre.ethers.utils.parseEther("0.0");
 
       await expect(optionMarket.placeOptionBid([bidInput, newPremium, duration])).to.be.revertedWith(
         "Insufficient strike and premium amounts"
@@ -105,7 +105,7 @@ describe("Option Market", async () => {
     });
 
     it("should fail to place option bid if user cannot pay premium", async () => {
-      const newPremium = ethers.utils.parseEther("1.5");
+      const newPremium = hre.ethers.utils.parseEther("1.5");
 
       await expect(optionMarket.placeOptionBid([bidInput, newPremium, duration])).to.be.revertedWith(
         "Insufficient funds"
@@ -121,7 +121,7 @@ describe("Option Market", async () => {
     });
 
     it("should successfully modify strike price", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.2");
+      const newBidAmount = hre.ethers.utils.parseEther("0.2");
 
       await expect(optionMarket.modifyOptionBid(0, newBidAmount, premium, duration))
         .to.emit(optionMarket, "OptionBidModified")
@@ -129,7 +129,7 @@ describe("Option Market", async () => {
     });
 
     it("should successfully modify premium", async () => {
-      const newPremium = ethers.utils.parseEther("0.2");
+      const newPremium = hre.ethers.utils.parseEther("0.2");
 
       await expect(optionMarket.modifyOptionBid(0, bidAmount, newPremium, duration))
         .to.emit(optionMarket, "OptionBidModified")
@@ -165,7 +165,7 @@ describe("Option Market", async () => {
     });
 
     it("should fail to modify option bid if new strike is 0", async () => {
-      const newBidAmount = ethers.utils.parseEther("0.0");
+      const newBidAmount = hre.ethers.utils.parseEther("0.0");
 
       await expect(optionMarket.modifyOptionBid(0, newBidAmount, premium, duration)).to.be.revertedWith(
         "Insufficient strike and premium amounts"
@@ -173,7 +173,7 @@ describe("Option Market", async () => {
     });
 
     it("should fail to modify option bid if new premium is 0", async () => {
-      const newPremium = ethers.utils.parseEther("0.0");
+      const newPremium = hre.ethers.utils.parseEther("0.0");
 
       await expect(optionMarket.modifyOptionBid(0, bidAmount, newPremium, duration)).to.be.revertedWith(
         "Insufficient strike and premium amounts"
@@ -181,7 +181,7 @@ describe("Option Market", async () => {
     });
 
     it("should fail to modify option bid if bidder cannot cover the premium", async () => {
-      const newPremium = ethers.utils.parseEther("2.0");
+      const newPremium = hre.ethers.utils.parseEther("2.0");
 
       await expect(optionMarket.modifyOptionBid(0, bidAmount, newPremium, duration)).to.be.revertedWith(
         "Insufficient funds"
@@ -247,7 +247,7 @@ describe("Option Market", async () => {
           deployer.address,
           bidAmount,
           premium,
-          (await ethers.provider.getBlock("latest")).timestamp + THIRTY_DAYS
+          (await hre.ethers.provider.getBlock("latest")).timestamp + THIRTY_DAYS
         );
     });
 
@@ -260,7 +260,7 @@ describe("Option Market", async () => {
           deployer.address,
           bidAmount,
           premium,
-          (await ethers.provider.getBlock("latest")).timestamp + THIRTY_DAYS
+          (await hre.ethers.provider.getBlock("latest")).timestamp + THIRTY_DAYS
         );
     });
 
@@ -312,7 +312,7 @@ describe("Option Market", async () => {
   describe("Exercising option bids", async () => {
     beforeEach(async () => {
       // deposit more funds
-      const amount = ethers.utils.parseEther("3.0");
+      const amount = hre.ethers.utils.parseEther("3.0");
       tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
       await tx.wait();
 
@@ -379,7 +379,7 @@ describe("Option Market", async () => {
 
     it("should fail to exercise option if bidder no longer has the funds", async () => {
       // withdraw
-      const amount = ethers.utils.parseEther("3.0");
+      const amount = hre.ethers.utils.parseEther("3.0");
       tx = await vaultAccounting.connect(user).withdraw(amount, vaultNames.empty);
       await tx.wait();
 
@@ -390,7 +390,7 @@ describe("Option Market", async () => {
   describe("Closing option bids", async () => {
     beforeEach(async () => {
       // deposit more funds
-      const amount = ethers.utils.parseEther("3.0");
+      const amount = hre.ethers.utils.parseEther("3.0");
       tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
       await tx.wait();
 
@@ -409,16 +409,16 @@ describe("Option Market", async () => {
 
     it("should successfully close an option bid and emit event", async () => {
       // advance time past expiry
-      await ethers.provider.send("evm_increaseTime", [THIRTY_DAYS]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [THIRTY_DAYS]);
+      await hre.ethers.provider.send("evm_mine");
 
       await expect(optionMarket.connect(deployer).closeOption(0)).to.emit(optionMarket, "OptionClosed").withArgs(0);
     });
 
     it("should successfully close an option bid and send NFT back to seller", async () => {
       // advance time past expiry
-      await ethers.provider.send("evm_increaseTime", [THIRTY_DAYS]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [THIRTY_DAYS]);
+      await hre.ethers.provider.send("evm_mine");
 
       tx = await optionMarket.connect(deployer).closeOption(0);
       await tx.wait();
@@ -440,8 +440,8 @@ describe("Option Market", async () => {
       await tx.wait();
 
       // advance time past expiry
-      await ethers.provider.send("evm_increaseTime", [THIRTY_DAYS]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [THIRTY_DAYS]);
+      await hre.ethers.provider.send("evm_mine");
 
       tx = await optionMarket.connect(deployer).closeOption(1);
       await tx.wait();

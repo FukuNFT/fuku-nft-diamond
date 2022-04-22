@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("./fixture");
@@ -21,14 +21,14 @@ describe("Vault Accounting", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ vaultAccounting, vaultManagement, vaultNames, fukuToken } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
 
     // initialize vault parameters
-    emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
-    amount = ethers.utils.parseEther("2.0");
+    emptyVault = await hre.ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
+    amount = hre.ethers.utils.parseEther("2.0");
     expectedLpTokens = await emptyVault.getAmountLpTokens(amount);
     rewardsDuration = 604800; // 1 week
-    rewardsAmount = ethers.utils.parseEther("100.0");
+    rewardsAmount = hre.ethers.utils.parseEther("100.0");
   });
 
   it("should successfully return user vault balance after deposit", async () => {
@@ -164,15 +164,15 @@ describe("Vault Accounting", async () => {
       await tx.wait();
 
       // advance time by a day
-      await ethers.provider.send("evm_increaseTime", [86400]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [86400]);
+      await hre.ethers.provider.send("evm_mine");
     });
 
     it("should earn rewards at the current reward rate", async () => {
       const rewardPerToken = await vaultAccounting.rewardPerToken(vaultNames.empty);
 
       const earned = await vaultAccounting.earned(vaultNames.empty, user.address);
-      expect(earned).to.equal(rewardPerToken.mul(amount).div(ethers.utils.parseEther("1.0")));
+      expect(earned).to.equal(rewardPerToken.mul(amount).div(hre.ethers.utils.parseEther("1.0")));
     });
 
     it("should successfully claim rewards", async () => {
@@ -185,7 +185,7 @@ describe("Vault Accounting", async () => {
 
       const balAfter = await fukuToken.balanceOf(user.address);
 
-      expect(balAfter).to.be.closeTo(balBefore.add(earned), ethers.utils.parseEther("0.001"));
+      expect(balAfter).to.be.closeTo(balBefore.add(earned), hre.ethers.utils.parseEther("0.001"));
     });
 
     it("should stop earning rewards after withdrawing funds", async () => {
@@ -198,8 +198,8 @@ describe("Vault Accounting", async () => {
       await tx.wait();
 
       // fast forward a day
-      await ethers.provider.send("evm_increaseTime", [86400]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [86400]);
+      await hre.ethers.provider.send("evm_mine");
 
       const earned = await vaultAccounting.earned(vaultNames.empty, user.address);
       expect(earned).to.equal(0);
@@ -207,16 +207,16 @@ describe("Vault Accounting", async () => {
 
     it("should stop earning rewards after the rewards period has ended", async () => {
       // fast forward a the rewards period
-      await ethers.provider.send("evm_increaseTime", [rewardsDuration]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [rewardsDuration]);
+      await hre.ethers.provider.send("evm_mine");
 
       // claim
       tx = await vaultAccounting.connect(user).getReward(vaultNames.empty);
       await tx.wait();
 
       // fast forward a day
-      await ethers.provider.send("evm_increaseTime", [86400]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [86400]);
+      await hre.ethers.provider.send("evm_mine");
 
       const earned = await vaultAccounting.earned(vaultNames.empty, user.address);
       expect(earned).to.equal(0);
@@ -228,8 +228,8 @@ describe("Vault Accounting", async () => {
       await tx.wait();
 
       // fast forward a day
-      await ethers.provider.send("evm_increaseTime", [86400]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [86400]);
+      await hre.ethers.provider.send("evm_mine");
 
       const earnedDeployer = await vaultAccounting.earned(vaultNames.empty, deployer.address);
       const earnedUser = await vaultAccounting.earned(vaultNames.empty, user.address);

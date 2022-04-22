@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
@@ -20,7 +20,7 @@ describe("Rewards Management", async () => {
   beforeEach(async () => {
     // initializing fixture values
     ({ rewardsManagement } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user] = await hre.ethers.getSigners();
 
     // initializing rewards management parameters
     epochDuration = 604800; // 1 week
@@ -48,7 +48,7 @@ describe("Rewards Management", async () => {
 
       await expect(await rewardsManagement.startEpoch())
         .to.emit(rewardsManagement, "EpochStarted")
-        .withArgs(0, (await ethers.provider.getBlock("latest")).timestamp + epochDuration);
+        .withArgs(0, (await hre.ethers.provider.getBlock("latest")).timestamp + epochDuration);
     });
 
     it("should successfully start next epoch after first epoch ended", async () => {
@@ -61,11 +61,11 @@ describe("Rewards Management", async () => {
       await tx.wait();
 
       // advance time past expiry
-      await ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
+      await hre.ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
 
       await expect(await rewardsManagement.startEpoch())
         .to.emit(rewardsManagement, "EpochStarted")
-        .withArgs(1, (await ethers.provider.getBlock("latest")).timestamp + epochDuration);
+        .withArgs(1, (await hre.ethers.provider.getBlock("latest")).timestamp + epochDuration);
     });
 
     it("should fail to start an epoch before epoch end", async () => {
@@ -93,7 +93,7 @@ describe("Rewards Management", async () => {
 
   describe("Setting rewards distribution", async () => {
     beforeEach(async () => {
-      epochRewards = ethers.utils.parseEther("10.0");
+      epochRewards = hre.ethers.utils.parseEther("10.0");
 
       // need to set the duration before starting
       tx = await rewardsManagement.setEpochDuration(epochDuration);
@@ -104,14 +104,14 @@ describe("Rewards Management", async () => {
       await tx.wait();
 
       // advance until end of epoch
-      await ethers.provider.send("evm_increaseTime", [epochDuration]);
-      await ethers.provider.send("evm_mine");
+      await hre.ethers.provider.send("evm_increaseTime", [epochDuration]);
+      await hre.ethers.provider.send("evm_mine");
 
       // create merkle tree for airdrop
       const buf2hex = (x) => "0x" + x.toString("hex");
-      rewardAddressAndAmount = [[user.address, ethers.utils.parseEther("5.0")]];
+      rewardAddressAndAmount = [[user.address, hre.ethers.utils.parseEther("5.0")]];
       const leafNodes = rewardAddressAndAmount.map((entry) =>
-        ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
+        hre.ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
       );
       const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
       rootHash = merkleTree.getRoot();

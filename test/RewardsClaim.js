@@ -1,4 +1,4 @@
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 const { expect } = require("chai");
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
@@ -27,13 +27,13 @@ describe("Rewards Claim", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ rewardsClaim, rewardsManagement, fukuToken } = await fixture());
-    [deployer, user, user2] = await ethers.getSigners();
+    [deployer, user, user2] = await hre.ethers.getSigners();
     rewardsClaim = rewardsClaim.connect(user);
 
     // initialize rewards parameters
     currentEpoch = 0;
     epochDuration = 604800; // 1 week
-    bidAmount = ethers.utils.parseEther("2.0");
+    bidAmount = hre.ethers.utils.parseEther("2.0");
     nftId = 0;
 
     // set up the rewards management
@@ -43,17 +43,17 @@ describe("Rewards Claim", async () => {
     await tx.wait();
 
     // advance until end of epoch
-    await ethers.provider.send("evm_increaseTime", [epochDuration]);
-    await ethers.provider.send("evm_mine");
+    await hre.ethers.provider.send("evm_increaseTime", [epochDuration]);
+    await hre.ethers.provider.send("evm_mine");
 
     // create merkle tree for airdrop
     const buf2hex = (x) => "0x" + x.toString("hex");
     rewardAddressAndAmount = [
-      [user.address, ethers.utils.parseEther("5.0")],
-      [user2.address, ethers.utils.parseEther("5.0")],
+      [user.address, hre.ethers.utils.parseEther("5.0")],
+      [user2.address, hre.ethers.utils.parseEther("5.0")],
     ];
     const leafNodes = rewardAddressAndAmount.map((entry) =>
-      ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
+      hre.ethers.utils.solidityKeccak256(["address", "uint256"], [entry[0], entry[1]])
     );
     expectedRewards = rewardAddressAndAmount[0][1];
     const merkleTree = new MerkleTree(leafNodes, keccak256, { sortPairs: true });
@@ -62,7 +62,7 @@ describe("Rewards Claim", async () => {
     user2Proof = merkleTree.getProof(leafNodes[1]).map((x) => buf2hex(x.data));
 
     // set rewards
-    epochRewards = ethers.utils.parseEther("10.0");
+    epochRewards = hre.ethers.utils.parseEther("10.0");
     tx = await rewardsManagement.setEpochRewardsDistribution(0, rootHash, epochRewards);
     await tx.wait();
   });
@@ -89,8 +89,8 @@ describe("Rewards Claim", async () => {
 
   it("should fail to claim rewards if epoch has not ended", async () => {
     // advance time past expiry
-    await ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
-    await ethers.provider.send("evm_mine");
+    await hre.ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
+    await hre.ethers.provider.send("evm_mine");
 
     // start a new epoch
     tx = await rewardsManagement.startEpoch();
@@ -107,8 +107,8 @@ describe("Rewards Claim", async () => {
     await tx.wait();
 
     // advance time past expiry
-    await ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
-    await ethers.provider.send("evm_mine");
+    await hre.ethers.provider.send("evm_increaseTime", [epochDuration + 1]);
+    await hre.ethers.provider.send("evm_mine");
 
     await expect(rewardsClaim.claimRewards(currentEpoch + 1, expectedRewards, userProof)).to.be.revertedWith(
       "Epoch rewards not set"
