@@ -70,7 +70,7 @@ contract VaultAccountingFacet is IVaultAccounting {
         address vaultAddress = vs.vaultAddresses[vaultName];
 
         // deposit into vault on behalf of sender
-        IVault(vaultAddress).depositLpToken(amount);
+        IVault(vaultAddress).depositLpToken(amount, msg.sender);
         vs.userVaultBalances[msg.sender][vaultName] += amount;
 
         emit DepositLpToken(msg.sender, vaultName, amount);
