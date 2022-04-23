@@ -12,7 +12,7 @@ contract EmptyVault is BaseVault {
         return msg.value;
     }
 
-    function depositLpToken(uint256) external override onlyDiamond nonReentrant {
+    function depositLpToken(uint256, address) external override onlyDiamond nonReentrant {
         revert("Disabled.");
     }
 
