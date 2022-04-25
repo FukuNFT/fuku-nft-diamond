@@ -7,6 +7,12 @@ require("solidity-coverage");
 require("dotenv").config();
 
 module.exports = {
+  networks: {
+    rinkeby: {
+      url: process.env.RINKEBY_URL,
+      accounts: [process.env.RINKEBY_PRIVATE_KEY],
+    },
+  },
   solidity: {
     version: "0.8.4",
     settings: {
