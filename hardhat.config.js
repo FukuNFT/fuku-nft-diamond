@@ -7,9 +7,7 @@ require("solidity-coverage");
 require("dotenv").config();
 
 const RINKEBY_URL = process.env.RINKEBY_URL ? process.env.RINKEBY_URL : "";
-const RINKEBY_PRIVATE_KEY = process.env.RINKEBY_PRIVATE_KEY
-  ? process.env.RINKEBY_PRIVATE_KEY
-  : "0000000000000000000000000000000000000000000000000000000000000000";
+const RINKEBY_PRIVATE_KEY = process.env.RINKEBY_PRIVATE_KEY ? process.env.RINKEBY_PRIVATE_KEY : "";
 const COINMARKETCAP_API = process.env.COINMARKETCAP_API ? process.env.COINMARKETCAP_API : "";
 
 module.exports = {
