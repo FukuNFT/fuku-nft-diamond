@@ -6,11 +6,15 @@ require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("dotenv").config();
 
+const RINKEBY_URL = process.env.RINKEBY_URL ? process.env.RINKEBY_URL : "";
+const RINKEBY_PRIVATE_KEY = process.env.RINKEBY_PRIVATE_KEY ? process.env.RINKEBY_PRIVATE_KEY : "";
+const COINMARKETCAP_API = process.env.COINMARKETCAP_API ? process.env.COINMARKETCAP_API : "";
+
 module.exports = {
   networks: {
     rinkeby: {
-      url: process.env.RINKEBY_URL,
-      accounts: [process.env.RINKEBY_PRIVATE_KEY],
+      url: RINKEBY_URL,
+      accounts: [RINKEBY_PRIVATE_KEY],
     },
   },
   solidity: {
@@ -26,6 +30,6 @@ module.exports = {
     enabled: false,
     currency: "USD",
     gasPrice: 25,
-    coinmarketcap: process.env.COINMARKETCAP_API,
+    coinmarketcap: COINMARKETCAP_API,
   },
 };
