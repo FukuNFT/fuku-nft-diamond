@@ -36,7 +36,7 @@ module.exports = {
     coinmarketcap: COINMARKETCAP_API,
   },
   abiExporter: {
-    path: "./artifacts/abi",
+    path: "./export/abi-extracted",
     runOnCompile: true,
     clear: true,
     flat: true,

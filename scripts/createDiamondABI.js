@@ -7,7 +7,7 @@ async function main() {
 
   // create abi object
   let fukuAbi = [];
-  const abiFolder = "./artifacts/abi";
+  const abiFolder = "./export/abi-extracted";
   fs.readdirSync(abiFolder).forEach((name) => {
     const facetAbiFile = abiFolder + "/" + name;
     const data = fs.readFileSync(facetAbiFile, "utf8");
@@ -18,7 +18,7 @@ async function main() {
   const diamondAbi = JSON.stringify(diamondAbiDict, null, 2);
 
   // create the export folder if it doesn't exist
-  const exportFolder = "./artifacts/export/";
+  const exportFolder = "./export/";
   fs.mkdirSync(exportFolder, { recursive: true });
   // create the file
   fs.writeFileSync(exportFolder + "FukuDiamond.json", diamondAbi);
