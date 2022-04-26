@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
+require("hardhat-abi-exporter");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("hardhat-gas-reporter");
@@ -33,5 +34,14 @@ module.exports = {
     currency: "USD",
     gasPrice: 25,
     coinmarketcap: COINMARKETCAP_API,
+  },
+  abiExporter: {
+    path: "./artifacts/abi",
+    runOnCompile: true,
+    clear: true,
+    flat: true,
+    only: ["Facet"],
+    spacing: 2,
+    pretty: false,
   },
 };
