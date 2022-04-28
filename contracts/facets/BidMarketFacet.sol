@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IBidMarket } from "../interfaces/facets/IBidMarket.sol";
 import { ICryptoPunksMarket } from "../interfaces/ICryptoPunksMarket.sol";
-import { IVault } from "../interfaces/IVault.sol";
+import { IVault } from "../interfaces/vaults/IVault.sol";
 import { LibStorage, BidMarketStorage, VaultStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 import { BidInputParams, BidInfo } from "../FukuTypes.sol";

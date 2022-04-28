@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IOptionMarket } from "../interfaces/facets/IOptionMarket.sol";
 import { ICryptoPunksMarket } from "../interfaces/ICryptoPunksMarket.sol";
-import { IVault } from "../interfaces/IVault.sol";
+import { IVault } from "../interfaces/vaults/IVault.sol";
 import { LibStorage, OptionMarketStorage, VaultStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 import { OptionDuration, OptionInputParams, OptionInfo } from "../FukuTypes.sol";
