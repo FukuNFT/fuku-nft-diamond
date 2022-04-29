@@ -6,11 +6,11 @@ Bridging the gap between NFTs and DeFi
 
 ### Rinkeby
 
-Diamond: `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`
+Diamond: `0x92b5E83e22AE79DA3BbF811A3dC4f2036cB3623f`
 
-CryptoPunks: `0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0`
+CryptoPunks: `0x4f599C9703691a545F752C3c0d50e97fC030146C`
 
-Fuku Token: `0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82`
+Fuku Token: `0xcAc88c6f414a30a124F243d77f4a054eB99b0A7d`
 
 Empty Vault Name: `0xeeeeeeeeeeeeeeeeeeeeeeee`
 
