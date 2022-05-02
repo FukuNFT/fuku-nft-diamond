@@ -7,6 +7,7 @@ require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("dotenv").config();
 
+const MAINNET_URL = process.env.MAINNET_URL ? process.env.MAINNET_URL : "";
 const RINKEBY_URL = process.env.RINKEBY_URL ? process.env.RINKEBY_URL : "";
 const RINKEBY_PRIVATE_KEY = process.env.RINKEBY_PRIVATE_KEY
   ? process.env.RINKEBY_PRIVATE_KEY
@@ -15,6 +16,12 @@ const COINMARKETCAP_API = process.env.COINMARKETCAP_API ? process.env.COINMARKET
 
 module.exports = {
   networks: {
+    hardhat: {
+      forking: {
+        url: MAINNET_URL,
+        enabled: false,
+      },
+    },
     rinkeby: {
       url: RINKEBY_URL,
       accounts: [RINKEBY_PRIVATE_KEY],
