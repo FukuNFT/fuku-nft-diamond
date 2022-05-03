@@ -7,7 +7,7 @@ import { RocketTokenRETHInterface } from "../interfaces/vaults/RocketTokenRETHIn
 import { RocketStorageInterface } from "../interfaces/vaults/RocketStorageInterface.sol";
 
 contract RocketVault is BaseVault {
-    // Contract for depositing ETH and receiving rETH
+    // stores state for Rocket Protocol
     RocketStorageInterface rocketStorage;
 
     constructor (address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
@@ -41,13 +41,11 @@ contract RocketVault is BaseVault {
 
     function withdraw(uint256 lpTokenAmount, address payable recipient) external override onlyDiamond nonReentrant returns (uint256) {
         // Load contracts
-        address rocketVault = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketVault")));
         address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         // check that rocketVault has enough ETH to handle withdrawal
         uint256 amountToWithdraw = rETH.getEthValue(lpTokenAmount);
-        require(rocketVault.balance >= amountToWithdraw, "not enough ETH to withdraw");
         
         // Redeem rETH for ETH and send to recipient
         uint256 balanceBefore = address(this).balance;
@@ -80,11 +78,19 @@ contract RocketVault is BaseVault {
     }
 
     function getAmountETH(uint256 lpTokenAmount) external view override returns (uint256) {
-        // Load rETH contract
+        // Load rocketVault address and rETH contract
+        address rocketVault = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketVault")));
         address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
-        return rETH.getEthValue(lpTokenAmount);
+        uint256 ethAmount = rETH.getEthValue(lpTokenAmount);
+
+        // check if rocket vault has enough to withdraw, if not return rocket vault balance 
+        if (rocketVault.balance >= ethAmount) {
+            return ethAmount;
+        } else {
+            return rocketVault.balance;
+        }
     }
 
     function getAmountLpTokens(uint256 ethAmount) external view override returns (uint256) {
