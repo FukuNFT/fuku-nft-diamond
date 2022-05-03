@@ -176,6 +176,12 @@ describe("Vault Accounting", async () => {
     );
   });
 
+  it("should fail to withdraw more lp tokens than user balance", async () => {
+    await expect(vaultAccounting.connect(user).withdrawLpToken(amount, vaultNames.empty)).to.be.revertedWith(
+      "Insufficient token balance"
+    );
+  });
+
   it("should successfully emit an event when setting rewards duration", async () => {
     await expect(vaultAccounting.setRewardsDuration(vaultNames.empty, rewardsDuration))
       .to.emit(vaultAccounting, "RewardsDurationUpdated")
