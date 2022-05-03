@@ -13,8 +13,9 @@ interface IVault {
      * @dev Deposits LP token directly into vault
      *
      * @param amount The amount of LP tokens to deposit
+     * @param user The user depositing
      */
-    function depositLpToken(uint256 amount) external;
+    function depositLpToken(uint256 amount, address user) external;
 
     /**
      * @dev Converts LP token and withdraws as ETH

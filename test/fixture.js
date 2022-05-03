@@ -101,6 +101,7 @@ const fixture = deployments.createFixture(async () => {
   // create vault names
   const vaultNames = {
     empty: "0xeeeeeeeeeeeeeeeeeeeeeeee",
+    lpToken: "0xeeeeeeeeeeeeeeeeeeeeeeff",
   };
 
   // create and register vault
