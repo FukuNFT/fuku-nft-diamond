@@ -5,6 +5,7 @@ import { BaseVault } from "./BaseVault.sol";
 import { RocketDepositPoolInterface } from "../interfaces/vaults/RocketDepositPoolInterface.sol";
 import { RocketTokenRETHInterface } from "../interfaces/vaults/RocketTokenRETHInterface.sol";
 import { RocketStorageInterface } from "../interfaces/vaults/RocketStorageInterface.sol";
+import { RocketVaultInterface } from "../interfaces/vaults/RocketVaultInterface.sol";
 
 contract RocketVault is BaseVault {
     // stores state for Rocket Protocol
@@ -43,9 +44,6 @@ contract RocketVault is BaseVault {
         // Load contracts
         address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
-
-        // check that rocketVault has enough ETH to handle withdrawal
-        uint256 amountToWithdraw = rETH.getEthValue(lpTokenAmount);
         
         // Redeem rETH for ETH and send to recipient
         uint256 balanceBefore = address(this).balance;
@@ -78,18 +76,20 @@ contract RocketVault is BaseVault {
     }
 
     function getAmountETH(uint256 lpTokenAmount) external view override returns (uint256) {
-        // Load rocketVault address and rETH contract
-        address rocketVault = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketVault")));
+        // Load rocketVault and rETH contracts
+        address rocketVaultAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketVault")));
+        RocketVaultInterface rocketVault = RocketVaultInterface(rocketVaultAddress);
         address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         uint256 ethAmount = rETH.getEthValue(lpTokenAmount);
 
         // check if rocket vault has enough to withdraw, if not return rocket vault balance 
-        if (rocketVault.balance >= ethAmount) {
+        uint256 vaultBalance = rocketVault.balanceOf("rocketDepositPool");
+        if (vaultBalance >= ethAmount) {
             return ethAmount;
         } else {
-            return rocketVault.balance;
+            return vaultBalance;
         }
     }
 
