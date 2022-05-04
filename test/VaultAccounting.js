@@ -10,6 +10,7 @@ describe("Vault Accounting", async () => {
   let vaultManagement;
   let vaultNames;
   let fukuToken;
+  let diamond;
 
   // vault parameters
   let emptyVault;
@@ -17,10 +18,11 @@ describe("Vault Accounting", async () => {
   let expectedLpTokens;
   let rewardsDuration;
   let rewardsAmount;
+  let lpTokenVault;
 
   beforeEach(async () => {
     // initialize fixture values
-    ({ vaultAccounting, vaultManagement, vaultNames, fukuToken } = await fixture());
+    ({ vaultAccounting, vaultManagement, vaultNames, fukuToken, diamond } = await fixture());
     [deployer, user] = await ethers.getSigners();
 
     // initialize vault parameters
@@ -29,6 +31,13 @@ describe("Vault Accounting", async () => {
     expectedLpTokens = await emptyVault.getAmountLpTokens(amount);
     rewardsDuration = 604800; // 1 week
     rewardsAmount = ethers.utils.parseEther("100.0");
+
+    // create and register vault
+    const LpTokenVault = await ethers.getContractFactory("TestLpTokenVault");
+    lpTokenVault = await LpTokenVault.deploy(diamond.address, fukuToken.address);
+    await lpTokenVault.deployed();
+    tx = await vaultManagement.registerVault(vaultNames.lpToken, lpTokenVault.address);
+    await tx.wait();
   });
 
   it("should successfully return user vault balance after deposit", async () => {
@@ -40,11 +49,33 @@ describe("Vault Accounting", async () => {
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty)).to.equal(expectedLpTokens);
   });
 
+  it("should successfully return user vault balancer after lp token deposit", async () => {
+    // approve vault
+    tx = await fukuToken.approve(lpTokenVault.address, amount);
+    await tx.wait();
+    // user balance should change
+    await expect(() => {
+      vaultAccounting.connect(deployer).depositLpToken(vaultNames.lpToken, amount);
+    }).to.changeTokenBalance(fukuToken, deployer, amount.mul(-1));
+    // user balance should be reflected
+    expect(await vaultAccounting.userLPTokenBalance(deployer.address, vaultNames.lpToken)).to.equal(expectedLpTokens);
+  });
+
   it("should successfully emit event from deposit", async () => {
     // listen to event
     await expect(vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount }))
       .to.emit(vaultAccounting, "DepositEth")
       .withArgs(user.address, vaultNames.empty, amount, expectedLpTokens);
+  });
+
+  it("should successfully emit event from lp token deposit", async () => {
+    // approve vault
+    tx = await fukuToken.approve(lpTokenVault.address, amount);
+    await tx.wait();
+    // listen to event
+    await expect(vaultAccounting.connect(deployer).depositLpToken(vaultNames.lpToken, amount))
+      .to.emit(vaultAccounting, "DepositLpToken")
+      .withArgs(deployer.address, vaultNames.lpToken, amount);
   });
 
   it("should fail to deposit into vault directly", async () => {
@@ -75,6 +106,26 @@ describe("Vault Accounting", async () => {
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.empty)).to.equal(0);
   });
 
+  it("should successfully withdraw lp token from vault", async () => {
+    // approve vault
+    tx = await fukuToken.approve(lpTokenVault.address, amount);
+    await tx.wait();
+
+    // start by depositing
+    tx = await vaultAccounting.connect(deployer).depositLpToken(vaultNames.lpToken, amount);
+    await tx.wait();
+    // user balance should be reflected
+    const userBalance = await vaultAccounting.userLPTokenBalance(deployer.address, vaultNames.lpToken);
+    expect(userBalance).to.be.gt(0);
+
+    // withdraw
+    await expect(() => {
+      vaultAccounting.connect(deployer).withdrawLpToken(amount, vaultNames.lpToken);
+    }).to.changeTokenBalance(fukuToken, deployer, amount);
+    // user balance should be reflected
+    expect(await vaultAccounting.userLPTokenBalance(deployer.address, vaultNames.lpToken)).to.equal(0);
+  });
+
   it("should successfully emit event from withdraw", async () => {
     // start by depositing
     tx = await vaultAccounting.connect(user).deposit(vaultNames.empty, { value: amount });
@@ -86,6 +137,24 @@ describe("Vault Accounting", async () => {
     await expect(vaultAccounting.connect(user).withdraw(userBalance, vaultNames.empty))
       .to.emit(vaultAccounting, "Withdraw")
       .withArgs(user.address, vaultNames.empty, amount, userBalance);
+  });
+
+  it("should successfully emit event from lp token withdraw", async () => {
+    // approve vault
+    tx = await fukuToken.approve(lpTokenVault.address, amount);
+    await tx.wait();
+
+    // start by depositing
+    tx = await vaultAccounting.connect(deployer).depositLpToken(vaultNames.lpToken, amount);
+    await tx.wait();
+    // user balance should be reflected
+    const userBalance = await vaultAccounting.userLPTokenBalance(deployer.address, vaultNames.lpToken);
+    expect(userBalance).to.be.gt(0);
+
+    // withdraw
+    await expect(vaultAccounting.connect(deployer).withdrawLpToken(amount, vaultNames.lpToken))
+      .to.emit(vaultAccounting, "WithdrawLpToken")
+      .withArgs(deployer.address, vaultNames.lpToken, amount);
   });
 
   it("should fail to withdraw from non-existent vault", async () => {
@@ -107,6 +176,12 @@ describe("Vault Accounting", async () => {
     );
   });
 
+  it("should fail to withdraw more lp tokens than user balance", async () => {
+    await expect(vaultAccounting.connect(user).withdrawLpToken(amount, vaultNames.empty)).to.be.revertedWith(
+      "Insufficient token balance"
+    );
+  });
+
   it("should successfully emit an event when setting rewards duration", async () => {
     await expect(vaultAccounting.setRewardsDuration(vaultNames.empty, rewardsDuration))
       .to.emit(vaultAccounting, "RewardsDurationUpdated")
@@ -118,6 +193,25 @@ describe("Vault Accounting", async () => {
     tx = await vaultAccounting.setRewardsDuration(vaultNames.empty, rewardsDuration);
     await tx.wait();
 
+    await expect(vaultAccounting.notifyRewardAmount(vaultNames.empty, rewardsAmount))
+      .to.emit(vaultAccounting, "RewardAdded")
+      .withArgs(vaultNames.empty, rewardsAmount);
+  });
+
+  it("should successfully emit an event when setting rewards amount during the rewards period", async () => {
+    // set the rewards duration
+    tx = await vaultAccounting.setRewardsDuration(vaultNames.empty, rewardsDuration);
+    await tx.wait();
+
+    // set the initial rewards
+    tx = await vaultAccounting.notifyRewardAmount(vaultNames.empty, rewardsAmount);
+    await tx.wait();
+
+    // advance time by a day
+    await ethers.provider.send("evm_increaseTime", [86400]);
+    await ethers.provider.send("evm_mine");
+
+    // set more rewards
     await expect(vaultAccounting.notifyRewardAmount(vaultNames.empty, rewardsAmount))
       .to.emit(vaultAccounting, "RewardAdded")
       .withArgs(vaultNames.empty, rewardsAmount);
