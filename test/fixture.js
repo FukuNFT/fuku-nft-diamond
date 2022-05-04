@@ -101,13 +101,26 @@ const fixture = deployments.createFixture(async () => {
   // create vault names
   const vaultNames = {
     empty: "0xeeeeeeeeeeeeeeeeeeeeeeee",
+    rocketVault: "0xeeeeeeeeeeeeeeeeeeeeeeed"
   };
+
+  // rocket pool addresses for deployment
+  const rocketAddresses = {
+    rocketStorage: "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46"
+  }
 
   // create and register vault
   const EmptyVault = await ethers.getContractFactory("EmptyVault");
   const emptyVault = await EmptyVault.deploy(diamond.address);
   await emptyVault.deployed();
   tx = await vaultManagement.registerVault(vaultNames.empty, emptyVault.address);
+  await tx.wait();
+
+  // create and register rocket vault
+  const RocketVault = await ethers.getContractFactory("RocketVault");
+  const rocketVault = await RocketVault.deploy(diamond.address, rocketAddresses.rocketStorage);
+  await rocketVault.deployed();
+  tx = await vaultManagement.registerVault(vaultNames.rocketVault, rocketVault.address);
   await tx.wait();
 
   return {
