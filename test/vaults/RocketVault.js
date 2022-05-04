@@ -27,7 +27,7 @@ describe("Rocket Vault", async () => {
     expectedEthAmount = ethers.utils.parseEther("1.0");
     expectedLpToken = "0xae78736Cd615f374D3085123A210448E74Fc6393"; // rETH token address
     rocketVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.rocketVault)); 
-    expectedLpTokenAmount = await rocketVault.getAmountLpTokens(depositAmount); //gets rETH amount minted when depositing 1 ETH
+    expectedLpTokenAmount = await rocketVault.getAmountLpTokens(depositAmount); //gets rETH amount equivalent to 1 ETH
   });
 
   it("Should reflect correct conversion from lp tokens to ETH", async () => {
