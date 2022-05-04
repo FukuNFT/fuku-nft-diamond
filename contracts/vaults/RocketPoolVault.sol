@@ -11,15 +11,19 @@ contract RocketVault is BaseVault {
     // stores state for Rocket Protocol
     RocketStorageInterface rocketStorage;
 
-    constructor (address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
+    constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
         rocketStorage = RocketStorageInterface(_rocketStorageAddress);
     }
 
     function deposit() external payable override onlyDiamond nonReentrant returns (uint256) {
         // Load contracts
-        address depositPoolAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketDepositPool")));
+        address depositPoolAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketDepositPool"))
+        );
         RocketDepositPoolInterface depositPool = RocketDepositPoolInterface(depositPoolAddress);
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         // Get amount of tokens before and after to determine how many were minted
@@ -34,17 +38,27 @@ contract RocketVault is BaseVault {
 
     function depositLpToken(uint256 amount, address user) external override onlyDiamond nonReentrant {
         // Load rETH contract
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         rETH.transferFrom(user, address(this), amount);
     }
 
-    function withdraw(uint256 lpTokenAmount, address payable recipient) external override onlyDiamond nonReentrant returns (uint256) {
+    function withdraw(uint256 lpTokenAmount, address payable recipient)
+        external
+        override
+        onlyDiamond
+        nonReentrant
+        returns (uint256)
+    {
         // Load contracts
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
-        
+
         // Redeem rETH for ETH and send to recipient
         uint256 balanceBefore = address(this).balance;
         rETH.burn(lpTokenAmount);
@@ -57,17 +71,21 @@ contract RocketVault is BaseVault {
         return ethReturned;
     }
 
-    function withdrawLpToken (uint256 lpTokenAmount, address recipient) external override onlyDiamond nonReentrant {
+    function withdrawLpToken(uint256 lpTokenAmount, address recipient) external override onlyDiamond nonReentrant {
         // Load rETH contract
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
-        rETH.transferFrom(address(this), recipient, lpTokenAmount);
+        rETH.transfer(recipient, lpTokenAmount);
     }
 
     function transferFunds(address payable newVaultAddress) external override onlyDiamond {
         // Load rETH contract
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         // redeem all rETH
@@ -77,14 +95,18 @@ contract RocketVault is BaseVault {
 
     function getAmountETH(uint256 lpTokenAmount) external view override returns (uint256) {
         // Load rocketVault and rETH contracts
-        address rocketVaultAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketVault")));
+        address rocketVaultAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketVault"))
+        );
         RocketVaultInterface rocketVault = RocketVaultInterface(rocketVaultAddress);
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         uint256 ethAmount = rETH.getEthValue(lpTokenAmount);
 
-        // check if rocket vault has enough to withdraw, if not return rocket vault balance 
+        // check if rocket vault has enough to withdraw, if not return rocket vault balance
         uint256 vaultBalance = rocketVault.balanceOf("rocketDepositPool");
         if (vaultBalance >= ethAmount) {
             return ethAmount;
@@ -95,13 +117,15 @@ contract RocketVault is BaseVault {
 
     function getAmountLpTokens(uint256 ethAmount) external view override returns (uint256) {
         // Load rETH contract
-        address rethAddress = rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        address rethAddress = rocketStorage.getAddress(
+            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
+        );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
         return rETH.getRethValue(ethAmount);
     }
 
     function getLpToken() external view override returns (address) {
-        return rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketETHToken")));
+        return rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketTokenRETH")));
     }
 }
