@@ -96,4 +96,24 @@ describe("Vault Management", async () => {
     // unregister
     await expect(vaultManagement.unregisterVault(vaultName)).to.be.revertedWith("Vault already unregistered");
   });
+
+  it("should fail to upgrade vault that is unregistered", async () => {
+    // deploy the new vault
+    const EmptyVault = await ethers.getContractFactory("EmptyVault");
+    const emptyVault = await EmptyVault.deploy(diamond.address);
+    await emptyVault.deployed();
+
+    // register
+    tx = await vaultManagement.registerVault(vaultName, emptyVault.address);
+    await tx.wait();
+
+    // unregister
+    tx = await vaultManagement.unregisterVault(vaultName);
+    await tx.wait();
+
+    // upgrade vault
+    await expect(vaultManagement.upgradeVault(vaultName, deployer.address)).to.be.revertedWith(
+      "Vault already unregistered"
+    );
+  });
 });

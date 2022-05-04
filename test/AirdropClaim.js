@@ -52,4 +52,13 @@ describe("Airdrop Claim", async () => {
 
     await expect(airdropClaim.claimAirdrop(userAirdropAmount, invalidProof)).to.be.revertedWith("Invalid merkle proof");
   });
+
+  it("should fail to claim an airdrop twice", async () => {
+    // claim it once
+    tx = await airdropClaim.claimAirdrop(userAirdropAmount, userProof);
+    await tx.wait();
+
+    // try again
+    await expect(airdropClaim.claimAirdrop(userAirdropAmount, userProof)).to.be.revertedWith("Already claimed");
+  });
 });

@@ -101,13 +101,14 @@ const fixture = deployments.createFixture(async () => {
   // create vault names
   const vaultNames = {
     empty: "0xeeeeeeeeeeeeeeeeeeeeeeee",
-    rocketVault: "0xeeeeeeeeeeeeeeeeeeeeeeed"
+    rocketVault: "0xeeeeeeeeeeeeeeeeeeeeeeed",
+    lpToken: "0xeeeeeeeeeeeeeeeeeeeeeeff",
   };
 
   // rocket pool addresses for deployment
   const rocketAddresses = {
-    rocketStorage: "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46"
-  }
+    rocketStorage: "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46",
+  };
 
   // create and register vault
   const EmptyVault = await ethers.getContractFactory("EmptyVault");

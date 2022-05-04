@@ -35,6 +35,9 @@ struct RewardsManagementStorage {
     uint256 nextEpochId;
     uint256 epochDuration;
     mapping(uint256 => uint256) epochEndings;
+    mapping(uint256 => bytes32) epochRewardsMekleRoots;
+    mapping(uint256 => uint256) epochTotalRewards;
+    mapping(uint256 => mapping(address => bool)) rewardsClaimed;
 }
 
 struct DepositsRewardsStorage {
