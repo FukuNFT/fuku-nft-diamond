@@ -5,7 +5,17 @@ require("hardhat-deploy-ethers");
 require("hardhat-gas-reporter");
 require("dotenv").config();
 
+const MAINNET_URL = process.env.MAINNET_URL ? process.env.MAINNET_URL : "";
+
 module.exports = {
+  networks: {
+    hardhat: {
+      forking: {
+        url: MAINNET_URL,
+        enabled: true,
+      },
+    },
+  },
   solidity: {
     version: "0.8.4",
     settings: {
