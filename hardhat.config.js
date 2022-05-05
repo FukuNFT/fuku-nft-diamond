@@ -19,7 +19,7 @@ module.exports = {
     hardhat: {
       forking: {
         url: MAINNET_URL,
-        // enabled: true,
+        enabled: false,
       },
     },
     rinkeby: {
