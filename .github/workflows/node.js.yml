@@ -48,3 +48,5 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
       - run: npx hardhat coverage
       - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
