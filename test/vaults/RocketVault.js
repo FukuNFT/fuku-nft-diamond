@@ -1,9 +1,16 @@
+const hre = require("hardhat");
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
 const { fixture } = require("../fixture");
 
 describe("Rocket Vault", async () => {
+  before(async function () {
+    if (!hre.network.config.forking || !hre.network.config.forking.enabled) {
+      this.skip();
+    }
+  });
+
   // fixture values
   let deployer, user;
   let vaultAccounting;
