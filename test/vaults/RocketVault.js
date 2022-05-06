@@ -24,6 +24,9 @@ describe("Rocket Vault", async () => {
   let expectedLpTokenAmount;
   let rocketVault;
   let rETH;
+  let impersonateAddress;
+  let depositPoolAddress;
+  let depositPool;
 
   // slippage upon getAmountEth conversion
   const conversionDelta = ethers.utils.parseEther("0.00000001");
@@ -40,13 +43,16 @@ describe("Rocket Vault", async () => {
     rocketVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.rocketVault));
     expectedLpTokenAmount = await rocketVault.getAmountLpTokens(depositAmount); //gets rETH amount equivalent to 1 ETH
     rETH = await ethers.getContractAt("RocketTokenRETHInterface", expectedLpToken);
+    impersonateAddress = "0x7Fe2547Bcb8FCE1D51f2A2C0d9D93174Cd05b3f9";
+    depositPoolAddress = "0x4D05E3d48a938db4b7a9A59A802D5b45011BDe58";
+    depositPool = await ethers.getContractAt("RocketDepositPoolInterface", depositPoolAddress);
 
     // impersonate user and redeem rETH to make room for testing
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: ["0x7Fe2547Bcb8FCE1D51f2A2C0d9D93174Cd05b3f9"],
+      params: [impersonateAddress],
     });
-    const signer = await ethers.getSigner("0x7Fe2547Bcb8FCE1D51f2A2C0d9D93174Cd05b3f9");
+    const signer = await ethers.getSigner(impersonateAddress);
 
     const burnAmount = ethers.utils.parseUnits("5.0"); // 5 rETH
 
@@ -157,9 +163,6 @@ describe("Rocket Vault", async () => {
   });
 
   it("Should allow LP token deposits", async () => {
-    const depositPoolAddress = "0x4D05E3d48a938db4b7a9A59A802D5b45011BDe58";
-    const depositPool = await ethers.getContractAt("RocketDepositPoolInterface", depositPoolAddress);
-
     // set up the deposit
     tx = await depositPool.connect(user).deposit({ value: depositAmount });
     await tx.wait();
@@ -235,9 +238,6 @@ describe("Rocket Vault", async () => {
   });
 
   it("Should fail to deposit LP tokens without passing through diamond", async () => {
-    const depositPoolAddress = "0x4D05E3d48a938db4b7a9A59A802D5b45011BDe58";
-    const depositPool = await ethers.getContractAt("RocketDepositPoolInterface", depositPoolAddress);
-
     // set up the deposit
     tx = await depositPool.connect(user).deposit({ value: depositAmount });
     await tx.wait();
