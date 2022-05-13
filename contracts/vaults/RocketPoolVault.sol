@@ -6,91 +6,103 @@ import { RocketDepositPoolInterface } from "../interfaces/vaults/RocketDepositPo
 import { RocketTokenRETHInterface } from "../interfaces/vaults/RocketTokenRETHInterface.sol";
 import { RocketStorageInterface } from "../interfaces/vaults/RocketStorageInterface.sol";
 import { RocketVaultInterface } from "../interfaces/vaults/RocketVaultInterface.sol";
+import { RocketPoolVaultStorage } from "./RocketPoolVaultStorage.sol";
+import { RocketPoolDelegate } from "./RocketPoolDelegate.sol";
 
 contract RocketVault is BaseVault {
     // stores state for Rocket Protocol
     RocketStorageInterface rocketStorage;
 
-    constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
+    // storage for Rocket Vault
+    RocketPoolVaultStorage rocketPoolVaultStorage;
+
+    constructor(
+        address _diamond,
+        address _rocketStorageAddress,
+        address _rocketPoolVaultStorageAddress
+    ) BaseVault(_diamond) {
         rocketStorage = RocketStorageInterface(_rocketStorageAddress);
+        rocketPoolVaultStorage = RocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
     }
 
-    function deposit() external payable override onlyDiamond nonReentrant returns (uint256) {
-        // Load contracts
-        address depositPoolAddress = rocketStorage.getAddress(
-            keccak256(abi.encodePacked("contract.address", "rocketDepositPool"))
-        );
-        RocketDepositPoolInterface depositPool = RocketDepositPoolInterface(depositPoolAddress);
-        address rethAddress = rocketStorage.getAddress(
-            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
-        );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+    function deposit(bytes32 _data) external payable override onlyDiamond nonReentrant returns (uint256) {
+        // retrive delegate address
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
 
-        // Get amount of tokens before and after to determine how many were minted
-        uint256 balanceBefore = rETH.balanceOf(address(this));
-        depositPool.deposit{ value: msg.value }();
-        uint256 balanceAfter = rETH.balanceOf(address(this));
-
-        uint256 sharesMinted = balanceAfter - balanceBefore;
-
-        return sharesMinted;
+        // if delegate doesn't exist, create new
+        // if delegate exists, use
+        if (delegateAddress == address(0)) {
+            RocketPoolDelegate newDelegate = new RocketPoolDelegate(
+                address(rocketStorage),
+                address(rocketPoolVaultStorage)
+            );
+            // stores new user's delegate address
+            rocketPoolVaultStorage.setDelegateAddress(_data, address(newDelegate));
+            return newDelegate.deposit{ value: msg.value }();
+        } else {
+            RocketPoolDelegate existingDelegate = RocketPoolDelegate(delegateAddress);
+            return existingDelegate.deposit{ value: msg.value }();
+        }
     }
 
-    function depositLpToken(uint256 amount, address user) external override onlyDiamond nonReentrant {
+    function depositLpToken(
+        bytes32 _data,
+        uint256 amount,
+        address user
+    ) external override onlyDiamond nonReentrant {
         // Load rETH contract
         address rethAddress = rocketStorage.getAddress(
             keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
         );
         RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
 
-        rETH.transferFrom(user, address(this), amount);
+        // retrive delegate address
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
+
+        // if doesn't exist, create new delegate
+        // if delegate exists, use
+        if (delegateAddress == address(0)) {
+            RocketPoolDelegate newDelegate = new RocketPoolDelegate(
+                address(rocketStorage),
+                address(rocketPoolVaultStorage)
+            );
+            // stores new user's delegate address
+            rocketPoolVaultStorage.setDelegateAddress(_data, address(newDelegate));
+            rETH.transferFrom(user, address(newDelegate), amount);
+        } else {
+            RocketPoolDelegate existingDelegate = RocketPoolDelegate(delegateAddress);
+            rETH.transferFrom(user, address(existingDelegate), amount);
+        }
     }
 
-    function withdraw(uint256 lpTokenAmount, address payable recipient)
-        external
-        override
-        onlyDiamond
-        nonReentrant
-        returns (uint256)
-    {
-        // Load contracts
-        address rethAddress = rocketStorage.getAddress(
-            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
-        );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+    function withdraw(
+        bytes32 _data,
+        uint256 lpTokenAmount,
+        address payable recipient
+    ) external override onlyDiamond nonReentrant returns (uint256) {
+        // retrive delegate address
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
+        RocketPoolDelegate delegate = RocketPoolDelegate(delegateAddress);
 
-        // Redeem rETH for ETH and send to recipient
-        uint256 balanceBefore = address(this).balance;
-        rETH.burn(lpTokenAmount);
-        uint256 balanceAfter = address(this).balance;
-
-        uint256 ethReturned = balanceAfter - balanceBefore;
-
-        recipient.transfer(ethReturned);
-
-        return ethReturned;
+        return delegate.withdraw(lpTokenAmount, payable(recipient));
     }
 
-    function withdrawLpToken(uint256 lpTokenAmount, address recipient) external override onlyDiamond nonReentrant {
-        // Load rETH contract
-        address rethAddress = rocketStorage.getAddress(
-            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
-        );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+    function withdrawLpToken(
+        bytes32 _data,
+        uint256 lpTokenAmount,
+        address recipient
+    ) external override onlyDiamond nonReentrant {
+        // retrive delegate address
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
+        RocketPoolDelegate delegate = RocketPoolDelegate(delegateAddress);
 
-        rETH.transfer(recipient, lpTokenAmount);
+        delegate.withdrawLpToken(lpTokenAmount, recipient);
     }
 
-    function transferFunds(address payable newVaultAddress) external override onlyDiamond {
-        // Load rETH contract
-        address rethAddress = rocketStorage.getAddress(
-            keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
-        );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
-
-        // redeem all rETH
-        rETH.burn(rETH.balanceOf(address(this)));
-        newVaultAddress.transfer(address(this).balance);
+    function transferFunds(address payable newImplementation) external override onlyDiamond {
+        // upgrade current implementation to new implementation?
+        // if so, just need to update in RocketPoolVaultStorage
+        rocketPoolVaultStorage.setNewImplementation(newImplementation);
     }
 
     function getAmountETH(uint256 lpTokenAmount) external view override returns (uint256) {
