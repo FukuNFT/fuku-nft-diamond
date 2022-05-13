@@ -16,6 +16,9 @@ contract RocketPoolVaultStorage is Ownable {
     }
 
     function initialize(address _currentImplemntation) external onlyOwner {
+        // initialize instead of constructor
+        // need this contract address for RocketPoolVault deployment
+        // will pass in current implementation after
         currentImplementation = _currentImplemntation;
     }
 
