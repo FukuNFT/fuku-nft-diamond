@@ -1,15 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { BaseDelegate } from "./BaseDelegate.sol";
 import { RocketDepositPoolInterface } from "../interfaces/vaults/RocketDepositPoolInterface.sol";
 import { RocketTokenRETHInterface } from "../interfaces/vaults/RocketTokenRETHInterface.sol";
+import { IDelegate } from "../interfaces/vaults/IDelegate.sol";
+import { RocketStorageInterface } from "../interfaces/vaults/RocketStorageInterface.sol";
+import { IRocketPoolVaultStorage } from "../interfaces/vaults/IRocketPoolVaultStorage.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract RocketVaultDelegate is BaseDelegate {
-    constructor(address _rocketStorageAddress, address _rocketPoolVaultStorageAddress)
-        BaseDelegate(_rocketStorageAddress, _rocketPoolVaultStorageAddress)
-    {
-        // do we need to store the depositor's address?
+contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
+    RocketStorageInterface rocketStorage;
+    IRocketPoolVaultStorage rocketPoolVaultStorage; // holds the current vault implementation
+
+    modifier onlyCurrentImplementation() {
+        address currentVaultImplementation = rocketPoolVaultStorage.getCurrentImplementation();
+        require(msg.sender == currentVaultImplementation, "Only the current implementation can call function");
+        _;
+    }
+
+    constructor(address _rocketStorageAddress, address _rocketPoolVaultStorageAddress) {
+        rocketStorage = RocketStorageInterface(_rocketStorageAddress);
+        rocketPoolVaultStorage = IRocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
     }
 
     function deposit() external payable override onlyCurrentImplementation nonReentrant returns (uint256) {
