@@ -6,7 +6,7 @@ import { RocketDepositPoolInterface } from "../interfaces/vaults/RocketDepositPo
 import { RocketTokenRETHInterface } from "../interfaces/vaults/RocketTokenRETHInterface.sol";
 import { RocketStorageInterface } from "../interfaces/vaults/RocketStorageInterface.sol";
 import { RocketVaultInterface } from "../interfaces/vaults/RocketVaultInterface.sol";
-import { RocketPoolVaultStorage } from "./RocketPoolVaultStorage.sol";
+import { IRocketPoolVaultStorage } from "../interfaces/vaults/IRocketPoolVaultStorage.sol";
 import { RocketPoolDelegate } from "./RocketPoolDelegate.sol";
 
 contract RocketVault is BaseVault {
@@ -14,7 +14,7 @@ contract RocketVault is BaseVault {
     RocketStorageInterface rocketStorage;
 
     // storage for Rocket Vault
-    RocketPoolVaultStorage rocketPoolVaultStorage;
+    IRocketPoolVaultStorage rocketPoolVaultStorage;
 
     constructor(
         address _diamond,
@@ -22,7 +22,7 @@ contract RocketVault is BaseVault {
         address _rocketPoolVaultStorageAddress
     ) BaseVault(_diamond) {
         rocketStorage = RocketStorageInterface(_rocketStorageAddress);
-        rocketPoolVaultStorage = RocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
+        rocketPoolVaultStorage = IRocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
     }
 
     function deposit(bytes32 _data) external payable override onlyDiamond nonReentrant returns (uint256) {
