@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { RocketDepositPoolInterface } from "../interfaces/vaults/RocketDepositPoolInterface.sol";
-import { RocketTokenRETHInterface } from "../interfaces/vaults/RocketTokenRETHInterface.sol";
-import { IDelegate } from "../interfaces/vaults/IDelegate.sol";
-import { RocketStorageInterface } from "../interfaces/vaults/RocketStorageInterface.sol";
+import { IRocketDepositPool } from "../interfaces/vaults/IRocketDepositPool.sol";
+import { IRocketTokenRETH } from "../interfaces/vaults/IRocketTokenRETH.sol";
+import { IRocketDelegate } from "../interfaces/vaults/IRocketDelegate.sol";
+import { IRocketStorage } from "../interfaces/vaults/IRocketStorage.sol";
 import { IRocketPoolVaultStorage } from "../interfaces/vaults/IRocketPoolVaultStorage.sol";
+
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
-    RocketStorageInterface rocketStorage;
+contract RocketPoolDelegate is IRocketDelegate, ReentrancyGuard {
+    IRocketStorage rocketStorage;
     IRocketPoolVaultStorage rocketPoolVaultStorage; // holds the current vault implementation
 
     modifier onlyCurrentImplementation() {
@@ -19,7 +20,7 @@ contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
     }
 
     constructor(address _rocketStorageAddress, address _rocketPoolVaultStorageAddress) {
-        rocketStorage = RocketStorageInterface(_rocketStorageAddress);
+        rocketStorage = IRocketStorage(_rocketStorageAddress);
         rocketPoolVaultStorage = IRocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
     }
 
@@ -28,11 +29,11 @@ contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
         address depositPoolAddress = rocketStorage.getAddress(
             keccak256(abi.encodePacked("contract.address", "rocketDepositPool"))
         );
-        RocketDepositPoolInterface depositPool = RocketDepositPoolInterface(depositPoolAddress);
+        IRocketDepositPool depositPool = IRocketDepositPool(depositPoolAddress);
         address rethAddress = rocketStorage.getAddress(
             keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
         );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+        IRocketTokenRETH rETH = IRocketTokenRETH(rethAddress);
 
         // Get amount of tokens before and after to determine how many were minted
         uint256 balanceBefore = rETH.balanceOf(address(this));
@@ -49,7 +50,7 @@ contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
         address rethAddress = rocketStorage.getAddress(
             keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
         );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+        IRocketTokenRETH rETH = IRocketTokenRETH(rethAddress);
 
         rETH.transferFrom(user, address(this), amount);
     }
@@ -65,7 +66,7 @@ contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
         address rethAddress = rocketStorage.getAddress(
             keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
         );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+        IRocketTokenRETH rETH = IRocketTokenRETH(rethAddress);
 
         // Redeem rETH for ETH and send to recipient
         uint256 balanceBefore = address(this).balance;
@@ -89,7 +90,7 @@ contract RocketPoolDelegate is IDelegate, ReentrancyGuard {
         address rethAddress = rocketStorage.getAddress(
             keccak256(abi.encodePacked("contract.address", "rocketTokenRETH"))
         );
-        RocketTokenRETHInterface rETH = RocketTokenRETHInterface(rethAddress);
+        IRocketTokenRETH rETH = IRocketTokenRETH(rethAddress);
 
         rETH.transfer(recipient, lpTokenAmount);
     }
