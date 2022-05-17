@@ -18,7 +18,7 @@ contract RocketVault is BaseVault {
 
     constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
         rocketStorage = IRocketStorage(_rocketStorageAddress);
-        rocketPoolVaultStorage = new RocketPoolVaultStorage(address(this));
+        rocketPoolVaultStorage = new RocketPoolVaultStorage(address(this)); // creates instance of RocketPoolVaultStorage and sets current implemtation to this contract
     }
 
     function deposit(bytes32 _data) external payable override onlyDiamond nonReentrant returns (uint256) {
