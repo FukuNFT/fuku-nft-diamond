@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { RocketVault } from "./RocketPoolVault.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-
-contract RocketPoolVaultStorage is Ownable {
+contract RocketPoolVaultStorage {
     //stores the current vault implementation
     address currentImplementation;
 
@@ -15,15 +12,12 @@ contract RocketPoolVaultStorage is Ownable {
         _;
     }
 
-    function initialize(address _currentImplemntation) external onlyOwner {
-        // initialize instead of constructor
-        // need this contract address for RocketPoolVault deployment
-        // will pass in current implementation after
+    constructor(address _currentImplemntation) {
         currentImplementation = _currentImplemntation;
     }
 
     function getCurrentImplementation() public view returns (address) {
-        return address(currentImplementation);
+        return currentImplementation;
     }
 
     function setNewImplementation(address newImplementation) external onlyCurrentImplementation {
