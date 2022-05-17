@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IDelegate {
+interface IRocketDelegate {
     /**
      * @dev Deposits ETH and converts to vault's LP token
      *
