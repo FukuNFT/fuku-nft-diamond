@@ -8,7 +8,7 @@ interface IVault {
      * @param _data Additional user data if needed
      * @return The amount of LP tokens received from ETH deposit
      */
-    function deposit(bytes32 _data) external payable returns (uint256);
+    function deposit(bytes memory _data) external payable returns (uint256);
 
     /**
      * @dev Deposits LP token directly into vault
@@ -20,7 +20,7 @@ interface IVault {
     function depositLpToken(
         uint256 amount,
         address user,
-        bytes32 _data
+        bytes memory _data
     ) external;
 
     /**
@@ -34,7 +34,7 @@ interface IVault {
     function withdraw(
         uint256 lpTokenAmount,
         address payable recipient,
-        bytes32 _data
+        bytes memory _data
     ) external returns (uint256);
 
     /**
@@ -47,7 +47,7 @@ interface IVault {
     function withdrawLpToken(
         uint256 lpTokenAmount,
         address recipient,
-        bytes32 _data
+        bytes memory _data
     ) external;
 
     /**
