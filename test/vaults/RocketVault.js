@@ -12,7 +12,7 @@ describe("Rocket Vault", async () => {
   });
 
   // fixture values
-  let deployer, user;
+  let deployer, user, user2;
   let vaultAccounting;
   let vaultManagement;
   let vaultNames;
@@ -24,9 +24,14 @@ describe("Rocket Vault", async () => {
   let expectedLpTokenAmount;
   let rocketVault;
   let rETH;
-  let impersonateAddress;
+  let impersonateWithdrawAddress;
+  let impersonateDepositAddress;
   let depositPoolAddress;
   let depositPool;
+  let rocketDirectVault;
+  let rocketVaultStorageAddress;
+  let rocketVaultStorage;
+  let userAddressData;
 
   // slippage upon getAmountEth conversion
   const conversionDelta = ethers.utils.parseEther("0.00000001");
@@ -34,7 +39,7 @@ describe("Rocket Vault", async () => {
   beforeEach(async () => {
     // initialize fixture values
     ({ vaultAccounting, vaultManagement, vaultNames } = await fixture());
-    [deployer, user] = await ethers.getSigners();
+    [deployer, user, user2] = await ethers.getSigners();
 
     // initialize vault parameters
     depositAmount = ethers.utils.parseEther("1.0");
@@ -42,25 +47,46 @@ describe("Rocket Vault", async () => {
     expectedLpToken = "0xae78736Cd615f374D3085123A210448E74Fc6393"; // rETH token address
     rocketVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.rocketVault));
     expectedLpTokenAmount = await rocketVault.getAmountLpTokens(depositAmount); //gets rETH amount equivalent to 1 ETH
-    rETH = await ethers.getContractAt("RocketTokenRETHInterface", expectedLpToken);
-    impersonateAddress = "0x7Fe2547Bcb8FCE1D51f2A2C0d9D93174Cd05b3f9";
+    rETH = await ethers.getContractAt("IRocketTokenRETH", expectedLpToken);
+    impersonateWithdrawAddress = "0x7Fe2547Bcb8FCE1D51f2A2C0d9D93174Cd05b3f9";
+    impersonateDepositAddress = "0x2FAF487A4414Fe77e2327F0bf4AE2a264a776AD2";
     depositPoolAddress = "0x4D05E3d48a938db4b7a9A59A802D5b45011BDe58";
-    depositPool = await ethers.getContractAt("RocketDepositPoolInterface", depositPoolAddress);
+    depositPool = await ethers.getContractAt("IRocketDepositPool", depositPoolAddress);
+    userAddressData = await ethers.utils.defaultAbiCoder.encode(["address"], [user.address]);
+    rocketDirectVault = await ethers.getContractAt(
+      "RocketVault",
+      await vaultManagement.getVault(vaultNames.rocketVault)
+    );
+    rocketVaultStorageAddress = await rocketDirectVault.getVaultStorage();
+    rocketVaultStorage = await ethers.getContractAt("RocketPoolVaultStorage", rocketVaultStorageAddress);
 
-    // impersonate user and redeem rETH to make room for testing
+    // // // impersonate user and redeem rETH to make room for testing if needed
+    // await hre.network.provider.request({
+    //   method: "hardhat_impersonateAccount",
+    //   params: [impersonateWithdrawAddress],
+    // });
+    // const signer = await ethers.getSigner(impersonateWithdrawAddress);
+
+    // const burnAmount = ethers.utils.parseUnits("1.5"); // 1.5 rETH
+
+    // const approvetx = await rETH.connect(signer).approve(rETH.address, burnAmount);
+    // await approvetx.wait();
+
+    // const burntx = await rETH.connect(signer).burn(burnAmount);
+    // await burntx.wait();
+    // console.log("done");
+
+    // impersonate user and deposit ETH to make room for withdrawal if needed
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [impersonateAddress],
+      params: [impersonateDepositAddress],
     });
-    const signer = await ethers.getSigner(impersonateAddress);
+    const signer = await ethers.getSigner(impersonateDepositAddress);
 
-    const burnAmount = ethers.utils.parseUnits("5.0"); // 5 rETH
+    const depositEtherAmount = ethers.utils.parseEther("1000");
 
-    const approvetx = await rETH.connect(signer).approve(rETH.address, burnAmount);
-    await approvetx.wait();
-
-    const burntx = await rETH.connect(signer).burn(burnAmount);
-    await burntx.wait();
+    const depositTx = await depositPool.connect(signer).deposit({ value: depositEtherAmount });
+    await depositTx.wait();
   });
 
   it("Should reflect correct conversion from lp tokens to ETH", async () => {
@@ -75,7 +101,7 @@ describe("Rocket Vault", async () => {
     expect(await rocketVault.getLpToken()).to.equal(expectedLpToken);
   });
 
-  it("Should deposit specified amount and reflect correct balance", async () => {
+  it("Should deposit specified amount and reflect correct balance in delegate address", async () => {
     // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
@@ -92,14 +118,22 @@ describe("Rocket Vault", async () => {
       expectedEthAmount,
       conversionDelta
     );
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(expectedLpTokenAmount);
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
   });
 
-  it("Should withdraw specified amount and reflect correct balance", async () => {
+  it("Should withdraw specified amount and reflect correct balance in delegate address", async () => {
+    // user info prior to deposit
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+
     // set up the deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
 
+    // user info after deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
       expectedLpTokenAmount
     );
@@ -108,7 +142,9 @@ describe("Rocket Vault", async () => {
       conversionDelta
     );
 
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(expectedLpTokenAmount);
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
 
     // fast forward through withdrawal time restriction
     await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
@@ -120,14 +156,19 @@ describe("Rocket Vault", async () => {
     // user info after withdrawal
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.empty)).to.equal(0);
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(0);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
   });
 
-  it("Should transfer funds to new vault", async () => {
+  it("Should upgrade vault and set new implementation", async () => {
+    // user info prior to deposit
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+
     // set up the deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
 
+    // user info after deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
       expectedLpTokenAmount
     );
@@ -135,25 +176,23 @@ describe("Rocket Vault", async () => {
       expectedEthAmount,
       conversionDelta
     );
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(expectedLpTokenAmount);
 
-    // deploy new vault
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // deploy new empty vault
     const EmptyVault = await ethers.getContractFactory("EmptyVault");
     const newEmptyVault = await EmptyVault.deploy(vaultManagement.address);
     await newEmptyVault.deployed();
 
-    // fast forward through withdrawal time restriction
-    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
-
     // upgrade vault
+
     tx = await vaultManagement.upgradeVault(vaultNames.rocketVault, newEmptyVault.address);
     await tx.wait();
 
-    //verify old vault is empty
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(0);
-
-    //verify new vault balance
-    expect(await ethers.provider.getBalance(newEmptyVault.address)).to.be.closeTo(expectedEthAmount, conversionDelta);
+    // check currentImplementation on rocketVaultStorage
+    expect(await rocketVaultStorage.getCurrentImplementation()).to.equal(newEmptyVault.address);
 
     // verify user balance has not changed
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
@@ -162,7 +201,10 @@ describe("Rocket Vault", async () => {
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.lte(expectedEthAmount);
   });
 
-  it("Should allow LP token deposits", async () => {
+  it("Should allow LP token deposits and reflect correct balance in delegate address", async () => {
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+
     // set up the deposit
     tx = await depositPool.connect(user).deposit({ value: depositAmount });
     await tx.wait();
@@ -186,10 +228,13 @@ describe("Rocket Vault", async () => {
       conversionDelta
     );
 
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(expectedLpTokenAmount);
+    // get delegate address and check if rETH was transferred
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
   });
 
   it("Should allow LP token withdrawals", async () => {
+    // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
 
@@ -197,12 +242,18 @@ describe("Rocket Vault", async () => {
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
 
+    // user info after deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
       expectedLpTokenAmount
     );
-    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.lte(expectedEthAmount); //tiny slippage
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.closeTo(
+      expectedEthAmount,
+      conversionDelta
+    );
 
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(expectedLpTokenAmount);
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
 
     // fast forward through transfer time restriction
     await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
@@ -215,65 +266,171 @@ describe("Rocket Vault", async () => {
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.empty)).to.equal(0);
 
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(0);
+    // check delegate address and user address rETH balance after withdrawal
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
     expect(await rETH.balanceOf(user.address)).to.equal(expectedLpTokenAmount);
   });
 
-  it("should fail to deposit without passing through diamond", async () => {
-    await expect(rocketVault.connect(user).deposit({ value: depositAmount })).to.be.revertedWith(
-      "Only diamond can call function"
+  it("should fail to deposit directly to delegate contract", async () => {
+    // set up initial deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // retrive delegate contract
+    delegateProxy = await ethers.getContractAt("RocketPoolDelegate", delegateAddress);
+
+    await expect(delegateProxy.connect(user).deposit({ value: depositAmount })).to.be.revertedWith(
+      "Only the current implementation can call function"
     );
   });
 
-  it("should fail to withdraw without passing through diamond", async () => {
-    await expect(rocketVault.connect(user).withdraw(depositAmount, user.address)).to.be.revertedWith(
-      "Only diamond can call function"
+  it("should fail to withdraw directly from delegate contract", async () => {
+    // set up initial deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // retrive delegate contract
+    delegateProxy = await ethers.getContractAt("RocketPoolDelegate", delegateAddress);
+
+    await expect(delegateProxy.connect(user).withdraw(depositAmount, user.address)).to.be.revertedWith(
+      "Only the current implementation can call function"
     );
   });
 
-  it("should fail to transfer funds without passing through diamond", async () => {
-    await expect(rocketVault.connect(user).transferFunds(user.address)).to.be.revertedWith(
-      "Only diamond can call function"
-    );
-  });
+  it("Should fail to deposit LP tokens directly to delegate contract", async () => {
+    // set up initial deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
 
-  it("Should fail to deposit LP tokens without passing through diamond", async () => {
-    // set up the deposit
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // deposit directly with rocketpool
     tx = await depositPool.connect(user).deposit({ value: depositAmount });
     await tx.wait();
 
     // fast forward through transfer time restriction
     await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
 
-    // approve rETH to vault
-    approvetx = await rETH.connect(user).approve(rocketVault.address, expectedLpTokenAmount);
+    // retrive delegate contract
+    delegateProxy = await ethers.getContractAt("RocketPoolDelegate", delegateAddress);
+
+    // approve rETH to delegate contract
+    approvetx = await rETH.connect(user).approve(delegateProxy.address, expectedLpTokenAmount);
     await approvetx.wait();
 
-    await expect(rocketVault.connect(user).depositLpToken(expectedLpTokenAmount, user.address)).to.be.revertedWith(
-      "Only diamond can call function"
+    await expect(delegateProxy.connect(user).depositLpToken(expectedLpTokenAmount, user.address)).to.be.revertedWith(
+      "Only the current implementation can call function"
     );
   });
 
-  it("Should fail to withdraw LP tokens without passing through diamond", async () => {
-    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
-    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
-
-    // set up the deposit
+  it("Should fail to withdraw LP tokens directly from delegate contract", async () => {
+    // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
 
-    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
-      expectedLpTokenAmount
-    );
-    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.lte(expectedEthAmount); //tiny slippage
-
-    expect(await rETH.balanceOf(rocketVault.address)).to.equal(expectedLpTokenAmount);
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
 
     // fast forward through transfer time restriction
     await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
 
-    await expect(rocketVault.connect(user).withdrawLpToken(expectedLpTokenAmount, user.address)).to.be.revertedWith(
+    // retrive delegate contract
+    delegateProxy = await ethers.getContractAt("RocketPoolDelegate", delegateAddress);
+
+    await expect(delegateProxy.connect(user).withdrawLpToken(expectedLpTokenAmount, user.address)).to.be.revertedWith(
+      "Only the current implementation can call function"
+    );
+  });
+
+  it("should fail to upgrade current implementation without passing through diamond", async () => {
+    await expect(rocketVault.connect(user).transferFunds(user.address)).to.be.revertedWith(
       "Only diamond can call function"
     );
+  });
+
+  it("Should fail to upgrade current implementation in vault storage if not owner", async () => {
+    newVault = "0x283Af0B28c62C092C9727F1Ee09c02CA627EB7F5"; // random address
+    await expect(rocketVaultStorage.connect(user).setNewImplementation(newVault)).to.be.revertedWith(
+      "Ownable: caller is not the owner"
+    );
+  });
+
+  it("Should fail to set delegate address if not current implementation", async () => {
+    // set up initial deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // should fail if user2 tries to take user's delegate address
+    await expect(
+      rocketVaultStorage.connect(user2).setDelegateAddress(user2.address, delegateAddress)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
+  it("Should fail to deposit directly without passing through diamond", async () => {
+    await expect(rocketVault.connect(user).deposit(userAddressData, { value: depositAmount })).to.be.revertedWith(
+      "Only diamond can call function"
+    );
+  });
+
+  it("Should fail to withdraw directly without passing through diamond", async () => {
+    // set up initial deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // fast forward through transfer time restriction
+    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
+
+    await expect(rocketVault.connect(user).withdraw(depositAmount, user.address, userAddressData)).to.be.revertedWith(
+      "Only diamond can call function"
+    );
+  });
+
+  it("Should fail to deposit LP tokens directly without passing through diamond", async () => {
+    // deposit directly with rocketpool
+    tx = await depositPool.connect(user).deposit({ value: depositAmount });
+    await tx.wait();
+
+    // fast forward through transfer time restriction
+    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
+
+    await expect(
+      rocketVault.connect(user).depositLpToken(expectedLpTokenAmount, user.address, userAddressData)
+    ).to.be.revertedWith("Only diamond can call function");
+  });
+
+  it("Should fail to withdraw LP tokens directly without passing through diamond", async () => {
+    // set up initial deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // fast forward through transfer time restriction
+    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
+
+    await expect(
+      rocketVault.connect(user).withdrawLpToken(expectedLpToken, user.address, userAddressData)
+    ).to.be.revertedWith("Only diamond can call function");
   });
 });
