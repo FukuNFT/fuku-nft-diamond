@@ -51,7 +51,7 @@ contract VaultAccountingFacet is IVaultAccounting {
         address vaultAddress = vs.vaultAddresses[vaultName];
 
         // deposit into vault on behalf of sender
-        uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }();
+        uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }(abi.encode(msg.sender));
         vs.userVaultBalances[msg.sender][vaultName] += lpTokensAmount;
 
         emit DepositEth(msg.sender, vaultName, msg.value, lpTokensAmount);
@@ -70,7 +70,7 @@ contract VaultAccountingFacet is IVaultAccounting {
         address vaultAddress = vs.vaultAddresses[vaultName];
 
         // deposit into vault on behalf of sender
-        IVault(vaultAddress).depositLpToken(amount, msg.sender);
+        IVault(vaultAddress).depositLpToken(amount, msg.sender, (abi.encode(msg.sender)));
         vs.userVaultBalances[msg.sender][vaultName] += amount;
 
         emit DepositLpToken(msg.sender, vaultName, amount);
@@ -93,7 +93,11 @@ contract VaultAccountingFacet is IVaultAccounting {
         // update user balance
         vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
         // withdraw from vault and send to recipient
-        uint256 amountWithdrawn = IVault(vaultAddress).withdraw(lpTokenAmount, payable(msg.sender));
+        uint256 amountWithdrawn = IVault(vaultAddress).withdraw(
+            lpTokenAmount,
+            payable(msg.sender),
+            (abi.encode(msg.sender))
+        );
 
         emit Withdraw(msg.sender, vaultName, amountWithdrawn, lpTokenAmount);
     }
@@ -119,7 +123,7 @@ contract VaultAccountingFacet is IVaultAccounting {
         // update user balance
         vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
         // withdraw from vault and send to recipient
-        IVault(vaultAddress).withdrawLpToken(lpTokenAmount, payable(msg.sender));
+        IVault(vaultAddress).withdrawLpToken(lpTokenAmount, payable(msg.sender), (abi.encode(msg.sender)));
 
         emit WithdrawLpToken(msg.sender, vaultName, lpTokenAmount);
     }
