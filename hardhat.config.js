@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
 require("hardhat-abi-exporter");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
@@ -13,6 +14,7 @@ const RINKEBY_PRIVATE_KEY = process.env.RINKEBY_PRIVATE_KEY
   ? process.env.RINKEBY_PRIVATE_KEY
   : "0000000000000000000000000000000000000000000000000000000000000000";
 const COINMARKETCAP_API = process.env.COINMARKETCAP_API ? process.env.COINMARKETCAP_API : "";
+const ETHERSCAN_API = process.env.ETHERSCAN_API ? process.env.ETHERSCAN_API : "";
 
 module.exports = {
   networks: {
@@ -50,5 +52,8 @@ module.exports = {
     only: ["Facet"],
     spacing: 2,
     pretty: false,
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_API,
   },
 };
