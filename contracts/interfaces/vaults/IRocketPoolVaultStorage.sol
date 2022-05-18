@@ -6,7 +6,7 @@ interface IRocketPoolVaultStorage {
 
     function setNewImplementation(address newImplementation) external;
 
-    function setDelegateAddress(bytes32 _data, address delegateAddress) external;
+    function setDelegateAddress(address user, address delegateAddress) external;
 
-    function getDelegateAddress(bytes32 _data) external view returns (address);
+    function getDelegateAddress(address user) external view returns (address);
 }
