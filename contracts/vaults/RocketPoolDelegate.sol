@@ -94,4 +94,6 @@ contract RocketPoolDelegate is IRocketDelegate, ReentrancyGuard {
 
         rETH.transfer(recipient, lpTokenAmount);
     }
+
+    receive() external payable {}
 }
