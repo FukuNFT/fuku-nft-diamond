@@ -18,12 +18,13 @@ contract RocketVault is BaseVault {
 
     constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
         rocketStorage = IRocketStorage(_rocketStorageAddress);
-        rocketPoolVaultStorage = new RocketPoolVaultStorage(address(this)); // creates instance of RocketPoolVaultStorage and sets current implemtation to this contract
+        rocketPoolVaultStorage = new RocketPoolVaultStorage(address(this)); // creates instance of RocketPoolVaultStorage and sets current implemtation and owner to this contract
     }
 
-    function deposit(bytes32 _data) external payable override onlyDiamond nonReentrant returns (uint256) {
+    function deposit(bytes memory _data) external payable override onlyDiamond nonReentrant returns (uint256) {
         // retrive delegate address
-        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
+        address userAddress = abi.decode(_data, (address));
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(userAddress);
 
         // if delegate doesn't exist, create new
         // if delegate exists, use
@@ -33,10 +34,10 @@ contract RocketVault is BaseVault {
                 address(rocketPoolVaultStorage)
             );
             // stores new user's delegate address
-            rocketPoolVaultStorage.setDelegateAddress(_data, address(newDelegate));
+            rocketPoolVaultStorage.setDelegateAddress(userAddress, address(newDelegate));
             return newDelegate.deposit{ value: msg.value }();
         } else {
-            RocketPoolDelegate existingDelegate = RocketPoolDelegate(delegateAddress);
+            RocketPoolDelegate existingDelegate = RocketPoolDelegate(payable(delegateAddress));
             return existingDelegate.deposit{ value: msg.value }();
         }
     }
@@ -44,7 +45,7 @@ contract RocketVault is BaseVault {
     function depositLpToken(
         uint256 amount,
         address user,
-        bytes32 _data
+        bytes memory _data
     ) external override onlyDiamond nonReentrant {
         // Load rETH contract
         address rethAddress = rocketStorage.getAddress(
@@ -53,7 +54,8 @@ contract RocketVault is BaseVault {
         IRocketTokenRETH rETH = IRocketTokenRETH(rethAddress);
 
         // retrive delegate address
-        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
+        address userAddress = abi.decode(_data, (address));
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(user);
 
         // if doesn't exist, create new delegate
         // if delegate exists, use
@@ -63,10 +65,10 @@ contract RocketVault is BaseVault {
                 address(rocketPoolVaultStorage)
             );
             // stores new user's delegate address
-            rocketPoolVaultStorage.setDelegateAddress(_data, address(newDelegate));
+            rocketPoolVaultStorage.setDelegateAddress(userAddress, address(newDelegate));
             rETH.transferFrom(user, address(newDelegate), amount);
         } else {
-            RocketPoolDelegate existingDelegate = RocketPoolDelegate(delegateAddress);
+            RocketPoolDelegate existingDelegate = RocketPoolDelegate(payable(delegateAddress));
             rETH.transferFrom(user, address(existingDelegate), amount);
         }
     }
@@ -74,11 +76,12 @@ contract RocketVault is BaseVault {
     function withdraw(
         uint256 lpTokenAmount,
         address payable recipient,
-        bytes32 _data
+        bytes memory _data
     ) external override onlyDiamond nonReentrant returns (uint256) {
         // retrive delegate address
-        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
-        RocketPoolDelegate delegate = RocketPoolDelegate(delegateAddress);
+        address userAddress = abi.decode(_data, (address));
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(userAddress);
+        RocketPoolDelegate delegate = RocketPoolDelegate(payable(delegateAddress));
 
         return delegate.withdraw(lpTokenAmount, payable(recipient));
     }
@@ -86,11 +89,12 @@ contract RocketVault is BaseVault {
     function withdrawLpToken(
         uint256 lpTokenAmount,
         address recipient,
-        bytes32 _data
+        bytes memory _data
     ) external override onlyDiamond nonReentrant {
         // retrive delegate address
-        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(_data);
-        RocketPoolDelegate delegate = RocketPoolDelegate(delegateAddress);
+        address userAddress = abi.decode(_data, (address));
+        address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(userAddress);
+        RocketPoolDelegate delegate = RocketPoolDelegate(payable(delegateAddress));
 
         delegate.withdrawLpToken(lpTokenAmount, recipient);
     }
@@ -135,5 +139,9 @@ contract RocketVault is BaseVault {
 
     function getLpToken() external view override returns (address) {
         return rocketStorage.getAddress(keccak256(abi.encodePacked("contract.address", "rocketTokenRETH")));
+    }
+
+    function getVaultStorage() external view returns (address) {
+        return address(rocketPoolVaultStorage);
     }
 }
