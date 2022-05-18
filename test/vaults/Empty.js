@@ -15,6 +15,7 @@ describe("Empty Vault", async () => {
   let expectedEthAmount;
   let expectedLpTokenAmount;
   let emptyVault;
+  let userData;
 
   beforeEach(async () => {
     // initialize fixture values
@@ -27,6 +28,7 @@ describe("Empty Vault", async () => {
     expectedLpTokenAmount = ethers.utils.parseEther("1.0");
     expectedLpToken = "0x0000000000000000000000000000000000000000";
     emptyVault = await ethers.getContractAt("IVault", await vaultManagement.getVault(vaultNames.empty));
+    userData = await ethers.utils.defaultAbiCoder.encode(["address"], [user.address]);
   });
 
   it("should reflect correct conversion from ETH to lp tokens", async () => {
@@ -105,13 +107,13 @@ describe("Empty Vault", async () => {
   });
 
   it("should fail to deposit without passing through diamond", async () => {
-    await expect(emptyVault.connect(user).deposit({ value: depositAmount })).to.be.revertedWith(
+    await expect(emptyVault.connect(user).deposit(userData, { value: depositAmount })).to.be.revertedWith(
       "Only diamond can call function"
     );
   });
 
   it("should fail to withdraw without passing through diamond", async () => {
-    await expect(emptyVault.connect(user).withdraw(depositAmount, user.address)).to.be.revertedWith(
+    await expect(emptyVault.connect(user).withdraw(depositAmount, user.address, userData)).to.be.revertedWith(
       "Only diamond can call function"
     );
   });
