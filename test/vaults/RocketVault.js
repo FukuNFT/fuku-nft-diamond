@@ -192,7 +192,7 @@ describe("Rocket Vault", async () => {
     await tx.wait();
 
     // check currentImplementation on rocketVaultStorage
-    expect(await rocketVaultStorage.getCurrentImplementation()).to.equal(newEmptyVault.address);
+    expect(await rocketVaultStorage.owner()).to.equal(newEmptyVault.address);
 
     // verify user balance has not changed
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
@@ -423,7 +423,7 @@ describe("Rocket Vault", async () => {
 
   it("Should fail to upgrade current implementation in vault storage if not owner", async () => {
     newVault = "0x283Af0B28c62C092C9727F1Ee09c02CA627EB7F5"; // random address
-    await expect(rocketVaultStorage.connect(user).setNewImplementation(newVault)).to.be.revertedWith(
+    await expect(rocketVaultStorage.connect(user).transferOwnership(newVault)).to.be.revertedWith(
       "Ownable: caller is not the owner"
     );
   });

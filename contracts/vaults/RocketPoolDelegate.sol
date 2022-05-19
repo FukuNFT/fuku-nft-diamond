@@ -5,23 +5,23 @@ import { IRocketDepositPool } from "../interfaces/vaults/IRocketDepositPool.sol"
 import { IRocketTokenRETH } from "../interfaces/vaults/IRocketTokenRETH.sol";
 import { IRocketDelegate } from "../interfaces/vaults/IRocketDelegate.sol";
 import { IRocketStorage } from "../interfaces/vaults/IRocketStorage.sol";
-import { IRocketPoolVaultStorage } from "../interfaces/vaults/IRocketPoolVaultStorage.sol";
+import { RocketPoolVaultStorage } from "./RocketPoolVaultStorage.sol";
 
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract RocketPoolDelegate is IRocketDelegate, ReentrancyGuard {
     IRocketStorage rocketStorage;
-    IRocketPoolVaultStorage rocketPoolVaultStorage; // holds the current vault implementation
+    RocketPoolVaultStorage rocketPoolVaultStorage; // holds the current vault implementation
 
     modifier onlyCurrentImplementation() {
-        address currentVaultImplementation = rocketPoolVaultStorage.getCurrentImplementation();
+        address currentVaultImplementation = rocketPoolVaultStorage.owner();
         require(msg.sender == currentVaultImplementation, "Only the current implementation can call function");
         _;
     }
 
     constructor(address _rocketStorageAddress, address _rocketPoolVaultStorageAddress) {
         rocketStorage = IRocketStorage(_rocketStorageAddress);
-        rocketPoolVaultStorage = IRocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
+        rocketPoolVaultStorage = RocketPoolVaultStorage(_rocketPoolVaultStorageAddress);
     }
 
     function deposit() external payable override onlyCurrentImplementation nonReentrant returns (uint256) {

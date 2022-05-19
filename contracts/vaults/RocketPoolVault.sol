@@ -18,7 +18,7 @@ contract RocketVault is BaseVault {
 
     constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
         rocketStorage = IRocketStorage(_rocketStorageAddress);
-        rocketPoolVaultStorage = new RocketPoolVaultStorage(address(this)); // creates instance of RocketPoolVaultStorage and sets current implemtation and owner to this contract
+        rocketPoolVaultStorage = new RocketPoolVaultStorage(); // creates instance of RocketPoolVaultStorage and sets owner to this contract
     }
 
     function deposit(bytes memory _data) external payable override onlyDiamond nonReentrant returns (uint256) {
@@ -102,7 +102,7 @@ contract RocketVault is BaseVault {
     function transferFunds(address payable newImplementation) external override onlyDiamond {
         // upgrade current implementation to new implementation?
         // if so, just need to update in RocketPoolVaultStorage
-        rocketPoolVaultStorage.setNewImplementation(newImplementation);
+        rocketPoolVaultStorage.transferOwnership(newImplementation);
     }
 
     function getAmountETH(uint256 lpTokenAmount) external view override returns (uint256) {
