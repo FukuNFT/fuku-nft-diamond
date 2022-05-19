@@ -271,6 +271,68 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(user.address)).to.equal(expectedLpTokenAmount);
   });
 
+  it("Should record additional deposits by same user to same delegate address", async () => {
+    // user info prior to deposit
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
+
+    // set up the deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // user info after deposit
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
+      expectedLpTokenAmount
+    );
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.closeTo(
+      expectedEthAmount,
+      conversionDelta
+    );
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // set up second deposit
+    tx2 = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx2.wait();
+
+    expectedEthAmountAfter = await ethers.utils.parseEther("2.0");
+    expectedLpTokenAmountAfter = await rocketVault.getAmountLpTokens(expectedEthAmountAfter);
+
+    // user info after deposit
+    expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.be.closeTo(
+      expectedLpTokenAmountAfter,
+      conversionDelta
+    ); // rETH value may have increased
+    expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.closeTo(
+      expectedEthAmountAfter,
+      conversionDelta
+    );
+
+    // check delegate address rETH balance
+    expect(await rETH.balanceOf(delegateAddress)).to.be.closeTo(expectedLpTokenAmountAfter, conversionDelta);
+  });
+
+  it("Should create different delegate proxies for different users", async () => {
+    // set up first user deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // set up second user deposit
+    tx2 = await vaultAccounting.connect(user2).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx2.wait();
+
+    delegateAddress2 = await rocketVaultStorage.getDelegateAddress(user2.address);
+    expect(await rETH.balanceOf(delegateAddress2)).to.equal(expectedLpTokenAmount);
+
+    expect(delegateAddress).to.not.equal(delegateAddress2);
+  });
+
   it("should fail to deposit directly to delegate contract", async () => {
     // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
