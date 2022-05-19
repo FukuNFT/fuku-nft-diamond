@@ -51,6 +51,9 @@ contract VaultAccountingFacet is IVaultAccounting {
         address vaultAddress = vs.vaultAddresses[vaultName];
 
         // deposit into vault on behalf of sender
+        // Hendrik:
+        // bytes optionalData = LibVaultUtils.getVaultOptionalData(vaultName);
+        // uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }(optionalData);
         uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }(abi.encode(msg.sender));
         vs.userVaultBalances[msg.sender][vaultName] += lpTokensAmount;
 
