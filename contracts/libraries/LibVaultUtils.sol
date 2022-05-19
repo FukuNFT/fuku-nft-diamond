@@ -30,4 +30,11 @@ library LibVaultUtils {
             return IERC20(vaultLpToken).balanceOf(vault);
         }
     }
+
+    // Hendrik:
+    // function getVaultOptionalData(bytes32 vaultName) internal view returns (bytes memory optionalData) {
+    //     if (vaultName == empty_vault_name) {
+    //         optionalData = abi.encode(msg.sender);
+    //     }
+    // }
 }
