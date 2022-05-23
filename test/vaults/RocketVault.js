@@ -149,7 +149,7 @@ describe("Rocket Vault", async () => {
     // fast forward through withdrawal time restriction
     await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
 
-    // initial withdrawal
+    // initiate withdrawal
     tx = await vaultAccounting.connect(user).withdraw(expectedLpTokenAmount, vaultNames.rocketVault);
     await tx.wait();
 
@@ -331,6 +331,72 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(delegateAddress2)).to.equal(expectedLpTokenAmount);
 
     expect(delegateAddress).to.not.equal(delegateAddress2);
+  });
+
+  it("Should allow multiple users to withdraw simultaneously", async () => {
+    // set up first user deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // set up second user deposit
+    tx2 = await vaultAccounting.connect(user2).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx2.wait();
+
+    delegateAddress2 = await rocketVaultStorage.getDelegateAddress(user2.address);
+    expect(await rETH.balanceOf(delegateAddress2)).to.equal(expectedLpTokenAmount);
+
+    // fast forward through withdrawal time restriction
+    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
+
+    // initiate user 2 withdrawal
+    withdrawtx = await vaultAccounting.connect(user2).withdraw(expectedLpTokenAmount, vaultNames.rocketVault);
+    await withdrawtx.wait();
+
+    // check if user 2 delegate address rETH balance is correct
+    expect(await rETH.balanceOf(delegateAddress2)).to.equal(0);
+
+    // initiate user 1 withdrawal
+    withdrawtx2 = await vaultAccounting.connect(user).withdraw(expectedLpTokenAmount, vaultNames.rocketVault);
+
+    // check if user 1 delegate address rETH balance is correct
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
+  });
+
+  it("Should allow multiple users to withdraw LP tokens simultaneously", async () => {
+    // set up first user deposit
+    tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx.wait();
+
+    // get delegate address and check if rETH was minted
+    delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
+
+    // set up second user deposit
+    tx2 = await vaultAccounting.connect(user2).deposit(vaultNames.rocketVault, { value: depositAmount });
+    await tx2.wait();
+
+    delegateAddress2 = await rocketVaultStorage.getDelegateAddress(user2.address);
+    expect(await rETH.balanceOf(delegateAddress2)).to.equal(expectedLpTokenAmount);
+
+    // fast forward through withdrawal time restriction
+    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
+
+    // set up user 2 LP token withdrawal
+    withdrawtx = await vaultAccounting.connect(user2).withdrawLpToken(expectedLpTokenAmount, vaultNames.rocketVault);
+    await withdrawtx.wait();
+
+    // check if user 2 delegate address rETH balance is correct
+    expect(await rETH.balanceOf(delegateAddress2)).to.equal(0);
+
+    // initiate user 1 withdrawal
+    withdrawtx2 = await vaultAccounting.connect(user).withdrawLpToken(expectedLpTokenAmount, vaultNames.rocketVault);
+
+    // check if user 1 delegate address rETH balance is correct
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
   });
 
   it("should fail to deposit directly to delegate contract", async () => {
