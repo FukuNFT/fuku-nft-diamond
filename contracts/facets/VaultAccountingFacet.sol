@@ -51,10 +51,8 @@ contract VaultAccountingFacet is IVaultAccounting {
         address vaultAddress = vs.vaultAddresses[vaultName];
 
         // deposit into vault on behalf of sender
-        // Hendrik:
-        // bytes optionalData = LibVaultUtils.getVaultOptionalData(vaultName);
-        // uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }(optionalData);
-        uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }(abi.encode(msg.sender));
+        bytes memory optionalData = LibVaultUtils.getVaultOptionalData(vaultName);
+        uint256 lpTokensAmount = IVault(vaultAddress).deposit{ value: msg.value }(optionalData);
         vs.userVaultBalances[msg.sender][vaultName] += lpTokensAmount;
 
         emit DepositEth(msg.sender, vaultName, msg.value, lpTokensAmount);
@@ -73,7 +71,8 @@ contract VaultAccountingFacet is IVaultAccounting {
         address vaultAddress = vs.vaultAddresses[vaultName];
 
         // deposit into vault on behalf of sender
-        IVault(vaultAddress).depositLpToken(amount, msg.sender, (abi.encode(msg.sender)));
+        bytes memory optionalData = LibVaultUtils.getVaultOptionalData(vaultName);
+        IVault(vaultAddress).depositLpToken(amount, msg.sender, optionalData);
         vs.userVaultBalances[msg.sender][vaultName] += amount;
 
         emit DepositLpToken(msg.sender, vaultName, amount);
@@ -96,11 +95,8 @@ contract VaultAccountingFacet is IVaultAccounting {
         // update user balance
         vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
         // withdraw from vault and send to recipient
-        uint256 amountWithdrawn = IVault(vaultAddress).withdraw(
-            lpTokenAmount,
-            payable(msg.sender),
-            (abi.encode(msg.sender))
-        );
+        bytes memory optionalData = LibVaultUtils.getVaultOptionalData(vaultName);
+        uint256 amountWithdrawn = IVault(vaultAddress).withdraw(lpTokenAmount, payable(msg.sender), optionalData);
 
         emit Withdraw(msg.sender, vaultName, amountWithdrawn, lpTokenAmount);
     }
@@ -126,7 +122,8 @@ contract VaultAccountingFacet is IVaultAccounting {
         // update user balance
         vs.userVaultBalances[msg.sender][vaultName] -= lpTokenAmount;
         // withdraw from vault and send to recipient
-        IVault(vaultAddress).withdrawLpToken(lpTokenAmount, payable(msg.sender), (abi.encode(msg.sender)));
+        bytes memory optionalData = LibVaultUtils.getVaultOptionalData(vaultName);
+        IVault(vaultAddress).withdrawLpToken(lpTokenAmount, payable(msg.sender), optionalData);
 
         emit WithdrawLpToken(msg.sender, vaultName, lpTokenAmount);
     }

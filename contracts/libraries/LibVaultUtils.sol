@@ -31,10 +31,17 @@ library LibVaultUtils {
         }
     }
 
-    // Hendrik:
-    // function getVaultOptionalData(bytes32 vaultName) internal view returns (bytes memory optionalData) {
-    //     if (vaultName == empty_vault_name) {
-    //         optionalData = abi.encode(msg.sender);
-    //     }
-    // }
+    function getVaultOptionalData(bytes12 vaultName) internal view returns (bytes memory optionalData) {
+        bytes12 empty_vault_name = 0xeeeeeeeeeeeeeeeeeeeeeeee;
+        bytes12 rocket_vault_name = 0xeeeeeeeeeeeeeeeeeeeeeeed;
+        bytes12 test_lp_vault_name = 0xeeeeeeeeeeeeeeeeeeeeeeff;
+
+        if (vaultName == empty_vault_name) {
+            optionalData = abi.encode(msg.sender);
+        } else if (vaultName == rocket_vault_name) {
+            optionalData = abi.encode(msg.sender);
+        } else if (vaultName == test_lp_vault_name) {
+            optionalData = abi.encode(msg.sender);
+        }
+    }
 }
