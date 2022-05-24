@@ -29,6 +29,7 @@ describe("Rocket Vault", async () => {
   let depositPoolAddress;
   let depositPool;
   let rocketDirectVault;
+  let rocketPoolStorageAddress;
   let rocketVaultStorageAddress;
   let rocketVaultStorage;
   let userAddressData;
@@ -57,6 +58,7 @@ describe("Rocket Vault", async () => {
       "RocketVault",
       await vaultManagement.getVault(vaultNames.rocketVault)
     );
+    rocketPoolStorageAddress = "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46";
     rocketVaultStorageAddress = await rocketDirectVault.getVaultStorage();
     rocketVaultStorage = await ethers.getContractAt("RocketPoolVaultStorage", rocketVaultStorageAddress);
 
@@ -181,24 +183,37 @@ describe("Rocket Vault", async () => {
     delegateAddress = await rocketVaultStorage.getDelegateAddress(user.address);
     expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
 
-    // deploy new empty vault
-    const EmptyVault = await ethers.getContractFactory("EmptyVault");
-    const newEmptyVault = await EmptyVault.deploy(vaultManagement.address);
-    await newEmptyVault.deployed();
+    // deploy new rocket vault
+    const NewRocketVault = await ethers.getContractFactory("TestRocketVault");
+    const newRocketVault = await NewRocketVault.deploy(
+      vaultManagement.address,
+      rocketPoolStorageAddress,
+      rocketVaultStorageAddress
+    );
+    await newRocketVault.deployed();
 
     // upgrade vault
-
-    tx = await vaultManagement.upgradeVault(vaultNames.rocketVault, newEmptyVault.address);
+    tx = await vaultManagement.upgradeVault(vaultNames.rocketVault, newRocketVault.address);
     await tx.wait();
 
     // check currentImplementation on rocketVaultStorage
-    expect(await rocketVaultStorage.owner()).to.equal(newEmptyVault.address);
+    expect(await rocketVaultStorage.owner()).to.equal(newRocketVault.address);
 
     // verify user balance has not changed
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(
       expectedLpTokenAmount
     );
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.lte(expectedEthAmount);
+
+    // fast forward through withdrawal time restriction
+    await hre.network.provider.send("hardhat_mine", ["0x2710"]); // 10000 blocks
+
+    // verify that user can still withdraw
+    tx = await vaultAccounting.connect(user).withdraw(expectedLpTokenAmount, vaultNames.rocketVault);
+    await tx.wait();
+
+    // verify that delegate address rETH balance is correct
+    expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
   });
 
   it("should allow LP token deposits and reflect correct balance in delegate address", async () => {
