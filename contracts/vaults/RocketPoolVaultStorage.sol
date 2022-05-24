@@ -6,13 +6,13 @@ import { IRocketPoolVaultStorage } from "../interfaces/vaults/IRocketPoolVaultSt
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RocketPoolVaultStorage is IRocketPoolVaultStorage, Ownable {
-    mapping(address => address) delegate;
+    mapping(address => address) private delegate;
 
     function setDelegateAddress(address user, address delegateAddress) external override onlyOwner {
         delegate[user] = delegateAddress;
     }
 
-    function getDelegateAddress(address user) public view override returns (address) {
+    function getDelegateAddress(address user) external view override returns (address) {
         return delegate[user];
     }
 }

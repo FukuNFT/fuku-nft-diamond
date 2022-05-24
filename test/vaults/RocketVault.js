@@ -89,19 +89,19 @@ describe("Rocket Vault", async () => {
     await depositTx.wait();
   });
 
-  it("Should reflect correct conversion from lp tokens to ETH", async () => {
+  it("should reflect correct conversion from lp tokens to ETH", async () => {
     expect(await rocketVault.getAmountETH(expectedLpTokenAmount)).to.be.closeTo(expectedEthAmount, conversionDelta);
   });
 
-  it("Should reflect correct conversion from ETH to lp tokens", async () => {
+  it("should reflect correct conversion from ETH to lp tokens", async () => {
     expect(await rocketVault.getAmountLpTokens(expectedEthAmount)).to.be.equal(expectedLpTokenAmount);
   });
 
-  it("Should return the correct lp token", async () => {
+  it("should return the correct lp token", async () => {
     expect(await rocketVault.getLpToken()).to.equal(expectedLpToken);
   });
 
-  it("Should deposit specified amount and reflect correct balance in delegate address", async () => {
+  it("should deposit specified amount and reflect correct balance in delegate address", async () => {
     // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
@@ -124,7 +124,7 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
   });
 
-  it("Should withdraw specified amount and reflect correct balance in delegate address", async () => {
+  it("should withdraw specified amount and reflect correct balance in delegate address", async () => {
     // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
@@ -159,7 +159,7 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
   });
 
-  it("Should upgrade vault and set new implementation", async () => {
+  it("should upgrade vault and set new implementation", async () => {
     // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
@@ -201,7 +201,7 @@ describe("Rocket Vault", async () => {
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.be.lte(expectedEthAmount);
   });
 
-  it("Should allow LP token deposits and reflect correct balance in delegate address", async () => {
+  it("should allow LP token deposits and reflect correct balance in delegate address", async () => {
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
 
@@ -233,7 +233,7 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(delegateAddress)).to.equal(expectedLpTokenAmount);
   });
 
-  it("Should allow LP token withdrawals", async () => {
+  it("should allow LP token withdrawals", async () => {
     // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
@@ -271,7 +271,7 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(user.address)).to.equal(expectedLpTokenAmount);
   });
 
-  it("Should record additional deposits by same user to same delegate address", async () => {
+  it("should record additional deposits by same user to same delegate address", async () => {
     // user info prior to deposit
     expect(await vaultAccounting.userLPTokenBalance(user.address, vaultNames.rocketVault)).to.equal(0);
     expect(await vaultAccounting.userETHBalance(user.address, vaultNames.rocketVault)).to.equal(0);
@@ -314,7 +314,7 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(delegateAddress)).to.be.closeTo(expectedLpTokenAmountAfter, conversionDelta);
   });
 
-  it("Should create different delegate proxies for different users", async () => {
+  it("should create different delegate proxies for different users", async () => {
     // set up first user deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -333,7 +333,7 @@ describe("Rocket Vault", async () => {
     expect(delegateAddress).to.not.equal(delegateAddress2);
   });
 
-  it("Should allow multiple users to withdraw simultaneously", async () => {
+  it("should allow multiple users to withdraw simultaneously", async () => {
     // set up first user deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -366,7 +366,7 @@ describe("Rocket Vault", async () => {
     expect(await rETH.balanceOf(delegateAddress)).to.equal(0);
   });
 
-  it("Should allow multiple users to withdraw LP tokens simultaneously", async () => {
+  it("should allow multiple users to withdraw LP tokens simultaneously", async () => {
     // set up first user deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -433,7 +433,7 @@ describe("Rocket Vault", async () => {
     );
   });
 
-  it("Should fail to deposit LP tokens directly to delegate contract", async () => {
+  it("should fail to deposit LP tokens directly to delegate contract", async () => {
     // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -461,7 +461,7 @@ describe("Rocket Vault", async () => {
     );
   });
 
-  it("Should fail to withdraw LP tokens directly from delegate contract", async () => {
+  it("should fail to withdraw LP tokens directly from delegate contract", async () => {
     // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -487,14 +487,14 @@ describe("Rocket Vault", async () => {
     );
   });
 
-  it("Should fail to upgrade current implementation in vault storage if not owner", async () => {
+  it("should fail to upgrade current implementation in vault storage if not owner", async () => {
     newVault = "0x283Af0B28c62C092C9727F1Ee09c02CA627EB7F5"; // random address
     await expect(rocketVaultStorage.connect(user).transferOwnership(newVault)).to.be.revertedWith(
       "Ownable: caller is not the owner"
     );
   });
 
-  it("Should fail to set delegate address if not current implementation", async () => {
+  it("should fail to set delegate address if not current implementation", async () => {
     // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -509,13 +509,13 @@ describe("Rocket Vault", async () => {
     ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
-  it("Should fail to deposit directly without passing through diamond", async () => {
+  it("should fail to deposit directly without passing through diamond", async () => {
     await expect(rocketVault.connect(user).deposit(userAddressData, { value: depositAmount })).to.be.revertedWith(
       "Only diamond can call function"
     );
   });
 
-  it("Should fail to withdraw directly without passing through diamond", async () => {
+  it("should fail to withdraw directly without passing through diamond", async () => {
     // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();
@@ -532,7 +532,7 @@ describe("Rocket Vault", async () => {
     );
   });
 
-  it("Should fail to deposit LP tokens directly without passing through diamond", async () => {
+  it("should fail to deposit LP tokens directly without passing through diamond", async () => {
     // deposit directly with rocketpool
     tx = await depositPool.connect(user).deposit({ value: depositAmount });
     await tx.wait();
@@ -545,7 +545,7 @@ describe("Rocket Vault", async () => {
     ).to.be.revertedWith("Only diamond can call function");
   });
 
-  it("Should fail to withdraw LP tokens directly without passing through diamond", async () => {
+  it("should fail to withdraw LP tokens directly without passing through diamond", async () => {
     // set up initial deposit
     tx = await vaultAccounting.connect(user).deposit(vaultNames.rocketVault, { value: depositAmount });
     await tx.wait();

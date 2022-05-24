@@ -10,8 +10,8 @@ import { RocketPoolVaultStorage } from "./RocketPoolVaultStorage.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract RocketPoolDelegate is IRocketDelegate, ReentrancyGuard {
-    IRocketStorage rocketStorage;
-    RocketPoolVaultStorage rocketPoolVaultStorage; // holds the current vault implementation
+    IRocketStorage private rocketStorage;
+    RocketPoolVaultStorage private rocketPoolVaultStorage; // holds the current vault implementation
 
     modifier onlyCurrentImplementation() {
         address currentVaultImplementation = rocketPoolVaultStorage.owner();

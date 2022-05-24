@@ -11,10 +11,10 @@ import { RocketPoolDelegate } from "./RocketPoolDelegate.sol";
 
 contract RocketVault is BaseVault {
     // stores state for Rocket Protocol
-    IRocketStorage rocketStorage;
+    IRocketStorage private rocketStorage;
 
     // storage for Rocket Vault
-    RocketPoolVaultStorage rocketPoolVaultStorage;
+    RocketPoolVaultStorage private rocketPoolVaultStorage;
 
     constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
         rocketStorage = IRocketStorage(_rocketStorageAddress);
@@ -22,7 +22,7 @@ contract RocketVault is BaseVault {
     }
 
     function deposit(bytes memory _data) external payable override onlyDiamond nonReentrant returns (uint256) {
-        // retrive delegate address
+        // retrieve delegate address
         address userAddress = abi.decode(_data, (address));
         address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(userAddress);
 
@@ -53,7 +53,7 @@ contract RocketVault is BaseVault {
         );
         IRocketTokenRETH rETH = IRocketTokenRETH(rethAddress);
 
-        // retrive delegate address
+        // retrieve delegate address
         address userAddress = abi.decode(_data, (address));
         address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(user);
 
@@ -78,7 +78,7 @@ contract RocketVault is BaseVault {
         address payable recipient,
         bytes memory _data
     ) external override onlyDiamond nonReentrant returns (uint256) {
-        // retrive delegate address
+        // retrieve delegate address
         address userAddress = abi.decode(_data, (address));
         address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(userAddress);
         RocketPoolDelegate delegate = RocketPoolDelegate(payable(delegateAddress));
@@ -91,7 +91,7 @@ contract RocketVault is BaseVault {
         address recipient,
         bytes memory _data
     ) external override onlyDiamond nonReentrant {
-        // retrive delegate address
+        // retrieve delegate address
         address userAddress = abi.decode(_data, (address));
         address delegateAddress = rocketPoolVaultStorage.getDelegateAddress(userAddress);
         RocketPoolDelegate delegate = RocketPoolDelegate(payable(delegateAddress));
@@ -100,9 +100,10 @@ contract RocketVault is BaseVault {
     }
 
     function transferFunds(address payable newImplementation) external override onlyDiamond {
-        // upgrade current implementation to new implementation?
-        // if so, just need to update in RocketPoolVaultStorage
+        // upgrade current implementation to new implementation
         rocketPoolVaultStorage.transferOwnership(newImplementation);
+
+        // todo: should have a rescue plan if the delegate contracts are no longer compatible
     }
 
     function getAmountETH(uint256 lpTokenAmount) external view override returns (uint256) {
