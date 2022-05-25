@@ -84,7 +84,7 @@ describe("Rocket Vault", async () => {
     });
     const signer = await ethers.getSigner(impersonateDepositAddress);
 
-    const depositEtherAmount = ethers.utils.parseEther("1000");
+    const depositEtherAmount = ethers.utils.parseEther("1900");
 
     const depositTx = await depositPool.connect(signer).deposit({ value: depositEtherAmount });
     await depositTx.wait();
