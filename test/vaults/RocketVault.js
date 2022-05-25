@@ -16,6 +16,7 @@ describe("Rocket Vault", async () => {
   let vaultAccounting;
   let vaultManagement;
   let vaultNames;
+  let rocketAddresses;
 
   // vault parameters
   let depositAmount;
@@ -29,7 +30,6 @@ describe("Rocket Vault", async () => {
   let depositPoolAddress;
   let depositPool;
   let rocketDirectVault;
-  let rocketPoolStorageAddress;
   let rocketVaultStorageAddress;
   let rocketVaultStorage;
   let userAddressData;
@@ -39,7 +39,7 @@ describe("Rocket Vault", async () => {
 
   beforeEach(async () => {
     // initialize fixture values
-    ({ vaultAccounting, vaultManagement, vaultNames } = await fixture());
+    ({ vaultAccounting, vaultManagement, vaultNames, rocketAddresses } = await fixture());
     [deployer, user, user2] = await ethers.getSigners();
 
     // initialize vault parameters
@@ -58,7 +58,6 @@ describe("Rocket Vault", async () => {
       "RocketVault",
       await vaultManagement.getVault(vaultNames.rocketVault)
     );
-    rocketPoolStorageAddress = "0x1d8f8f00cfa6758d7bE78336684788Fb0ee0Fa46";
     rocketVaultStorageAddress = await rocketDirectVault.getVaultStorage();
     rocketVaultStorage = await ethers.getContractAt("RocketPoolVaultStorage", rocketVaultStorageAddress);
 
@@ -187,7 +186,7 @@ describe("Rocket Vault", async () => {
     const NewRocketVault = await ethers.getContractFactory("TestRocketVault");
     const newRocketVault = await NewRocketVault.deploy(
       vaultManagement.address,
-      rocketPoolStorageAddress,
+      rocketAddresses.rocketStorage,
       rocketVaultStorageAddress
     );
     await newRocketVault.deployed();
