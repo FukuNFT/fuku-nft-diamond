@@ -5,4 +5,8 @@ interface IRocketPoolVaultStorage {
     function setDelegateAddress(address user, address delegateAddress) external;
 
     function getDelegateAddress(address user) external view returns (address);
+
+    function transferOwnership(address newOwner) external;
+
+    function owner() external view returns (address);
 }

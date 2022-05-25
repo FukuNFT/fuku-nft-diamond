@@ -12,7 +12,15 @@ contract RocketPoolVaultStorage is IRocketPoolVaultStorage, Ownable {
         delegate[user] = delegateAddress;
     }
 
+    function transferOwnership(address newOwner) public override(IRocketPoolVaultStorage, Ownable) onlyOwner {
+        super.transferOwnership(newOwner);
+    }
+
     function getDelegateAddress(address user) external view override returns (address) {
         return delegate[user];
+    }
+
+    function owner() public view override(IRocketPoolVaultStorage, Ownable) returns (address) {
+        return super.owner();
     }
 }
