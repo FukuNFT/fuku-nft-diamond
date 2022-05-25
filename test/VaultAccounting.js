@@ -19,6 +19,7 @@ describe("Vault Accounting", async () => {
   let rewardsDuration;
   let rewardsAmount;
   let lpTokenVault;
+  let userData;
 
   beforeEach(async () => {
     // initialize fixture values
@@ -31,6 +32,7 @@ describe("Vault Accounting", async () => {
     expectedLpTokens = await emptyVault.getAmountLpTokens(amount);
     rewardsDuration = 604800; // 1 week
     rewardsAmount = ethers.utils.parseEther("100.0");
+    userData = await ethers.utils.defaultAbiCoder.encode(["address"], [user.address]);
 
     // create and register vault
     const LpTokenVault = await ethers.getContractFactory("TestLpTokenVault");
@@ -79,7 +81,7 @@ describe("Vault Accounting", async () => {
   });
 
   it("should fail to deposit into vault directly", async () => {
-    await expect(emptyVault.deposit({ value: amount })).to.be.revertedWith("Only diamond can call function");
+    await expect(emptyVault.deposit(userData, { value: amount })).to.be.revertedWith("Only diamond can call function");
   });
 
   it("should fail to deposit into non-existent vault", async () => {

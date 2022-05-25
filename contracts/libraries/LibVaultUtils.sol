@@ -30,4 +30,13 @@ library LibVaultUtils {
             return IERC20(vaultLpToken).balanceOf(vault);
         }
     }
+
+    function getVaultOptionalData(bytes12 vaultName) internal view returns (bytes memory optionalData) {
+        // todo: find alternative solution instead of hardcoding
+        bytes12 rocket_vault_name = 0xeeeeeeeeeeeeeeeeeeeeeeed;
+
+        if (vaultName == rocket_vault_name) {
+            optionalData = abi.encode(msg.sender);
+        }
+    }
 }

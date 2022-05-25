@@ -142,6 +142,7 @@ const fixture = deployments.createFixture(async () => {
     rootHash,
     deployerProof,
     userProof,
+    rocketAddresses,
   };
 });
 

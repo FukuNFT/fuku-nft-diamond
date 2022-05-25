@@ -1,26 +1,28 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import { BaseVault } from "./BaseVault.sol";
+import { BaseVault } from "../vaults/BaseVault.sol";
 import { IRocketDepositPool } from "../interfaces/vaults/IRocketDepositPool.sol";
 import { IRocketTokenRETH } from "../interfaces/vaults/IRocketTokenRETH.sol";
 import { IRocketStorage } from "../interfaces/vaults/IRocketStorage.sol";
 import { IRocketVault } from "../interfaces/vaults/IRocketVault.sol";
-import { IRocketPoolVaultStorage } from "../interfaces/vaults/IRocketPoolVaultStorage.sol";
-import { RocketPoolVaultStorage } from "./RocketPoolVaultStorage.sol";
-import { RocketPoolDelegate } from "./RocketPoolDelegate.sol";
+import { RocketPoolVaultStorage } from "../vaults/RocketPoolVaultStorage.sol";
+import { RocketPoolDelegate } from "../vaults/RocketPoolDelegate.sol";
 
-contract RocketVault is BaseVault {
+contract TestRocketVault is BaseVault {
     // stores state for Rocket Protocol
     IRocketStorage private rocketStorage;
 
     // storage for Rocket Vault
-    IRocketPoolVaultStorage private rocketPoolVaultStorage;
+    RocketPoolVaultStorage private rocketPoolVaultStorage;
 
-    constructor(address _diamond, address _rocketStorageAddress) BaseVault(_diamond) {
+    constructor(
+        address _diamond,
+        address _rocketStorageAddress,
+        address _rocketVaultStorageAddress
+    ) BaseVault(_diamond) {
         rocketStorage = IRocketStorage(_rocketStorageAddress);
-        // creates instance of RocketPoolVaultStorage and sets owner to this contract
-        rocketPoolVaultStorage = new RocketPoolVaultStorage();
+        rocketPoolVaultStorage = RocketPoolVaultStorage(_rocketVaultStorageAddress);
     }
 
     function deposit(bytes memory _data) external payable override onlyDiamond nonReentrant returns (uint256) {

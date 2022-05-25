@@ -152,7 +152,7 @@ contract BidMarketFacet is IBidMarket {
         // update user balance
         vs.userVaultBalances[bidInfo.bidder][bidInfo.bidInput.vault] -= bidLPTokenAmount;
         // withdraw funds from vault
-        uint256 ethReturned = vault.withdraw(bidLPTokenAmount, payable(this));
+        uint256 ethReturned = vault.withdraw(bidLPTokenAmount, payable(this), abi.encode(bidInfo.bidder));
         // another safety check to make sure enough ETH was withdrawn
         require(bidInfo.bidInput.amount <= ethReturned, "Didn't burn enough LP tokens");
 
