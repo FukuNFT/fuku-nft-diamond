@@ -66,3 +66,7 @@ To compile, run:
 To run the tests, create `.env` file according to `.env.example`, and run:
 
 `> npx hardhat test`
+
+To create documentation, run:
+
+`> npx hardhat docgen`
