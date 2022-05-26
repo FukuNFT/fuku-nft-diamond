@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("hardhat-abi-exporter");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
+require("hardhat-docgen");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("dotenv").config();
@@ -55,5 +56,11 @@ module.exports = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API,
+  },
+  docgen: {
+    path: "./docs",
+    clear: true,
+    runOnCompile: true,
+    only: ["^contracts/facets", "^contracts/vendor/facets", "FukuInit.sol"],
   },
 };
