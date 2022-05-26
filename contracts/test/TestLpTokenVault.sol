@@ -12,19 +12,31 @@ contract TestLpTokenVault is BaseVault {
         lpToken = _lpToken;
     }
 
-    function deposit() external payable override returns (uint256) {
+    function deposit(bytes memory) external payable override returns (uint256) {
         revert("Disabled.");
     }
 
-    function depositLpToken(uint256 amount, address user) external override {
+    function depositLpToken(
+        uint256 amount,
+        address user,
+        bytes memory
+    ) external override {
         IERC20(lpToken).transferFrom(user, address(this), amount);
     }
 
-    function withdraw(uint256, address payable) external pure override returns (uint256) {
+    function withdraw(
+        uint256,
+        address payable,
+        bytes memory
+    ) external pure override returns (uint256) {
         revert("Disabled.");
     }
 
-    function withdrawLpToken(uint256 lpTokenAmount, address recipient) external override {
+    function withdrawLpToken(
+        uint256 lpTokenAmount,
+        address recipient,
+        bytes memory
+    ) external override {
         IERC20(lpToken).transfer(recipient, lpTokenAmount);
     }
 

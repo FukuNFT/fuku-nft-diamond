@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { IOptionMarket } from "../interfaces/facets/IOptionMarket.sol";
 import { ICryptoPunksMarket } from "../interfaces/ICryptoPunksMarket.sol";
-import { IVault } from "../interfaces/IVault.sol";
+import { IVault } from "../interfaces/vaults/IVault.sol";
 import { LibStorage, OptionMarketStorage, VaultStorage, TokenAddressStorage } from "../libraries/LibStorage.sol";
 import { LibVaultUtils } from "../libraries/LibVaultUtils.sol";
 import { OptionDuration, OptionInputParams, OptionInfo } from "../FukuTypes.sol";
@@ -156,7 +156,7 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // update user balance
         vs.userVaultBalances[option.bidder][option.optionInput.bidInput.vault] -= premiumLPTokenAmount;
         // withdraw the premium from bidder's vault
-        uint256 ethReturned = vault.withdraw(premiumLPTokenAmount, payable(this));
+        uint256 ethReturned = vault.withdraw(premiumLPTokenAmount, payable(this), abi.encode(option.bidder));
         // another safety check to make sure enough ETH was withdrawn
         require(option.optionInput.premium <= ethReturned, "Didn't burn enough LP tokens");
 
@@ -244,7 +244,11 @@ contract OptionMarketFacet is IOptionMarket, IERC721Receiver {
         // update user balance
         vs.userVaultBalances[option.bidder][option.optionInput.bidInput.vault] -= strikeLPTokenAmount;
         // withdraw the strike amount from bidder's vault
-        uint256 ethReturned = vault.withdraw(strikeLPTokenAmount, payable(oms.acceptedOptions[optionId].seller));
+        uint256 ethReturned = vault.withdraw(
+            strikeLPTokenAmount,
+            payable(oms.acceptedOptions[optionId].seller),
+            abi.encode(option.bidder)
+        );
         // another safety check to make sure enough ETH was withdrawn
         require(option.optionInput.bidInput.amount <= ethReturned, "Didn't burn enough LP tokens");
 

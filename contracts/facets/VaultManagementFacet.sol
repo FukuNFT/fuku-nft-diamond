@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IVaultManagement } from "../interfaces/facets/IVaultManagement.sol";
-import { IVault } from "../interfaces/IVault.sol";
+import { IVault } from "../interfaces/vaults/IVault.sol";
 import { LibStorage, VaultStorage } from "../libraries/LibStorage.sol";
 import { LibDiamond } from "../vendor/libraries/LibDiamond.sol";
 

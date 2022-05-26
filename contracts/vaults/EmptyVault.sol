@@ -6,13 +6,17 @@ import { BaseVault } from "./BaseVault.sol";
 contract EmptyVault is BaseVault {
     constructor(address _diamond) BaseVault(_diamond) {}
 
-    function deposit() external payable override onlyDiamond nonReentrant returns (uint256) {
+    function deposit(bytes memory) external payable override onlyDiamond nonReentrant returns (uint256) {
         // nothing to do
 
         return msg.value;
     }
 
-    function depositLpToken(uint256, address) external override onlyDiamond nonReentrant {
+    function depositLpToken(
+        uint256,
+        address,
+        bytes memory
+    ) external override onlyDiamond nonReentrant {
         revert("Disabled.");
     }
 
@@ -20,19 +24,21 @@ contract EmptyVault is BaseVault {
         newVaultAddress.transfer(address(this).balance);
     }
 
-    function withdraw(uint256 lpTokenAmount, address payable recipient)
-        external
-        override
-        onlyDiamond
-        nonReentrant
-        returns (uint256)
-    {
+    function withdraw(
+        uint256 lpTokenAmount,
+        address payable recipient,
+        bytes memory
+    ) external override onlyDiamond nonReentrant returns (uint256) {
         recipient.transfer(lpTokenAmount);
 
         return lpTokenAmount;
     }
 
-    function withdrawLpToken(uint256, address) external override onlyDiamond nonReentrant {
+    function withdrawLpToken(
+        uint256,
+        address,
+        bytes memory
+    ) external override onlyDiamond nonReentrant {
         revert("Disabled.");
     }
 
