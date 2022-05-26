@@ -3,6 +3,7 @@ artifacts/
 cache/
 coverage/
 export/
+docs/
 
 .env
 coverage.json

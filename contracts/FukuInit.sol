@@ -33,8 +33,12 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // of your diamond. Add parameters to the init funciton if you need to.
 
 contract FukuInit {
-    // You can add parameters to this function in order to pass in
-    // data to set your own state variables
+    /**
+     * @notice Initializing the diamond contracts
+     *
+     * @param cryptoPunks The address of the cryptopunks address
+     * @param airdropInitParams The airdrop initializing parameters
+     */
     function init(address cryptoPunks, AirdropInit calldata airdropInitParams) external {
         // adding ERC165 data
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
