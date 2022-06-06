@@ -27,6 +27,11 @@ async function main() {
   // verifies that user 1 did sign the message
   const verifyAddress = await ethers.utils.verifyMessage(message, signature);
   console.log("Signature signer is:", verifyAddress);
+
+  //todos:
+  // 1. verification that signer = owner of nft
+  // 2. link up with Jay/Dimitri to setup mock frontend to test
+  // 3. chat with team about off-chain storage of parameters
 }
 
 main()
